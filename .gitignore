@@ -12,16 +12,14 @@ Thumbs.db
 .idea/
 *.iml
 
-# VS Code
+# Code
 .vscode/
+.claude/
+venv/
 
 # =========================================
-# Node.js & Next.js (splitdine_server + frontend)
+# Node.js & Next.js
 node_modules/
-.env
-.env.local
-.env.production
-.env.development
 dist/
 .cache/
 .next/
@@ -60,10 +58,13 @@ android/app/key.properties
 android/key.jks
 **/android/app/.cxx/
 
-# Python environment
-venv/
 
-# Claude Code settings
-.claude/
-
+# Private Keys and areas
+.env
+.env.*
+*.env
+**/*.env
+.env.local
+.env.production
+.env.development
 

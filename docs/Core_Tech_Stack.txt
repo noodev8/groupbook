@@ -1,0 +1,11 @@
+Flutter - Mobile App
+Node.js - Server
+Express.js - Server
+Tailwind - Website CSS
+Next.js - Web front end
+Postgres - Database
+Resend - Emails
+JWT - Auth
+BCrypt - Password hashing and comparison
+Crypto - verification token generation
+

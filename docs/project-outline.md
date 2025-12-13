@@ -57,7 +57,6 @@ Restaurant staff creates a group booking with:
 
 - Event name
 - Date & time
-- Menu (fixed menu or selectable options)
 - Guest cut-off date
 
 System generates:
@@ -81,7 +80,6 @@ No login required.
 Each guest:
 - Opens the link
 - Enters name
-- Selects menu option (if applicable)
 - Confirms attendance
 
 Guest immediately appears in the event list.
@@ -92,35 +90,9 @@ Guest immediately appears in the event list.
 
 Restaurant can view:
 - Guest list
-- Menu choice counts
 - Total guest count
 
 Optionally export or copy summary.
-
----
-
-## Data Model (MVP)
-
-### Event
-- id
-- restaurant_name
-- event_name
-- event_date_time
-- price_per_head
-- cutoff_date
-- created_at
-
-### MenuOption
-- id
-- event_id
-- label (e.g. “Meat”, “Veg”, “Fish”)
-
-### Guest
-- id
-- event_id
-- name
-- menu_option_id
-- created_at
 
 ---
 
@@ -136,10 +108,10 @@ The MVP must **not** include:
 - White-labeling
 - Multi-venue support
 - Staff roles or permissions
-- Menu management beyond simple options
+- Menu options or dietary requirements
 
-If it’s not required to answer:
-> “Who’s coming and what are they having?”
+If it's not required to answer:
+> "Who's coming?"
 
 …it does not belong in MVP.
 
