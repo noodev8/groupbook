@@ -68,8 +68,8 @@ export default function DashboardPage() {
   // Show loading state while checking auth
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <p className="text-gray-500">Loading...</p>
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
+        <p className="text-gray-500 text-sm md:text-base">Loading...</p>
       </div>
     );
   }
@@ -83,14 +83,14 @@ export default function DashboardPage() {
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
       <header className="bg-white shadow">
-        <div className="max-w-7xl mx-auto px-4 py-4 sm:px-6 lg:px-8 flex justify-between items-center">
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900">{user.restaurant_name}</h1>
-            <p className="text-sm text-gray-500">{user.email}</p>
+        <div className="max-w-7xl mx-auto px-4 py-4 sm:px-6 lg:px-8 flex justify-between items-center gap-4">
+          <div className="min-w-0 flex-1">
+            <h1 className="text-lg sm:text-xl md:text-2xl font-bold text-gray-900 truncate">{user.restaurant_name}</h1>
+            <p className="text-xs sm:text-sm text-gray-500 truncate">{user.email}</p>
           </div>
           <button
             onClick={logout}
-            className="text-sm text-gray-600 hover:text-gray-900"
+            className="text-xs sm:text-sm text-gray-600 hover:text-gray-900 flex-shrink-0"
           >
             Sign out
           </button>
@@ -98,13 +98,13 @@ export default function DashboardPage() {
       </header>
 
       {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
+      <main className="max-w-7xl mx-auto px-4 py-6 md:py-8 sm:px-6 lg:px-8">
         {/* Actions */}
-        <div className="mb-8 flex justify-between items-center">
-          <h2 className="text-xl font-semibold text-gray-900">Your Events</h2>
+        <div className="mb-6 md:mb-8 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
+          <h2 className="text-lg md:text-xl font-semibold text-gray-900">Your Events</h2>
           <Link
             href="/dashboard/create"
-            className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+            className="px-4 py-2 bg-blue-600 text-white rounded-md text-sm md:text-base text-center hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
           >
             Create New Event
           </Link>
@@ -112,23 +112,23 @@ export default function DashboardPage() {
 
         {/* Error Message */}
         {eventsError && (
-          <div className="mb-4 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
+          <div className="mb-4 bg-red-50 border border-red-200 text-red-700 px-3 md:px-4 py-2 md:py-3 rounded text-sm md:text-base">
             {eventsError}
           </div>
         )}
 
         {/* Loading State */}
         {eventsLoading && (
-          <div className="bg-white rounded-lg shadow p-8 text-center">
-            <p className="text-gray-500">Loading events...</p>
+          <div className="bg-white rounded-lg shadow p-6 md:p-8 text-center">
+            <p className="text-gray-500 text-sm md:text-base">Loading events...</p>
           </div>
         )}
 
         {/* Empty State */}
         {!eventsLoading && events.length === 0 && (
-          <div className="bg-white rounded-lg shadow p-8 text-center">
-            <p className="text-gray-500 mb-4">You haven&apos;t created any events yet.</p>
-            <p className="text-sm text-gray-400">
+          <div className="bg-white rounded-lg shadow p-6 md:p-8 text-center">
+            <p className="text-gray-500 mb-4 text-sm md:text-base">You haven&apos;t created any events yet.</p>
+            <p className="text-xs md:text-sm text-gray-400">
               Click &quot;Create New Event&quot; to set up your first group booking.
             </p>
           </div>
@@ -139,19 +139,19 @@ export default function DashboardPage() {
           <div className="bg-white rounded-lg shadow overflow-hidden">
             <ul className="divide-y divide-gray-200">
               {events.map((event) => (
-                <li key={event.id} className="p-4 hover:bg-gray-50">
+                <li key={event.id} className="p-3 sm:p-4 hover:bg-gray-50">
                   <Link href={`/dashboard/event/${event.id}`} className="block">
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <h3 className="text-lg font-medium text-gray-900">
+                    <div className="flex justify-between items-start gap-3">
+                      <div className="min-w-0 flex-1">
+                        <h3 className="text-base md:text-lg font-medium text-gray-900 truncate">
                           {event.event_name}
                         </h3>
-                        <p className="text-sm text-gray-500 mt-1">
+                        <p className="text-xs sm:text-sm text-gray-500 mt-1">
                           {formatDateTime(event.event_date_time)}
                         </p>
                       </div>
-                      <div className="text-right">
-                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                      <div className="flex-shrink-0">
+                        <span className="inline-flex items-center px-2 sm:px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
                           {event.guest_count || 0} guests
                         </span>
                       </div>

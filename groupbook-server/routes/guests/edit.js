@@ -1,14 +1,15 @@
 /*
 =======================================================================================================================================
-API Route: add_guest
+API Route: edit_guest
 =======================================================================================================================================
-Method: POST
-Purpose: Allows a guest to add themselves to an event using the public link_token.
-         No authentication required. Enforces cutoff datetime.
+Method: PUT
+Purpose: Allows anyone to edit a guest's details using the public link_token.
+         No authentication required. Enforces cutoff datetime and lock status.
 =======================================================================================================================================
 Request Payload:
 {
   "link_token": "a1b2c3d4e5f6...",    // string, required - event's public link
+  "guest_id": 1,                      // number, required - guest to edit
   "name": "John Smith",               // string, required - guest's name
   "food_order": "Steak pie",          // string, optional - food order
   "dietary_notes": "Nut allergy"      // string, optional - dietary requirements
@@ -30,6 +31,7 @@ Return Codes:
 "SUCCESS"
 "MISSING_FIELDS"
 "EVENT_NOT_FOUND"
+"GUEST_NOT_FOUND"
 "REGISTRATION_CLOSED"
 "REGISTRATION_LOCKED"
 "SERVER_ERROR"
@@ -43,19 +45,19 @@ const { query } = require('../../database');
 const { optionalAuth } = require('../../middleware/auth');
 const { logApiCall } = require('../../utils/apiLogger');
 
-router.post('/add', optionalAuth, async (req, res) => {
-  logApiCall('add_guest');
+router.put('/edit', optionalAuth, async (req, res) => {
+  logApiCall('edit_guest');
 
   try {
-    const { link_token, name, food_order, dietary_notes } = req.body;
+    const { link_token, guest_id, name, food_order, dietary_notes } = req.body;
 
     // ---------------------------------------------------------------
     // Validate required fields
     // ---------------------------------------------------------------
-    if (!link_token || !name || !name.trim()) {
+    if (!link_token || !guest_id || !name || !name.trim()) {
       return res.json({
         return_code: 'MISSING_FIELDS',
-        message: 'Link token and name are required',
+        message: 'Link token, guest ID, and name are required',
       });
     }
 
@@ -112,16 +114,32 @@ router.post('/add', optionalAuth, async (req, res) => {
     }
 
     // ---------------------------------------------------------------
-    // Insert the new guest
+    // Check guest exists and belongs to this event
     // ---------------------------------------------------------------
-    const insertResult = await query(
-      `INSERT INTO guest (event_id, name, food_order, dietary_notes)
-       VALUES ($1, $2, $3, $4)
-       RETURNING id, name, food_order, dietary_notes, created_at`,
-      [event.id, trimmedName, trimmedFoodOrder, trimmedDietaryNotes]
+    const guestCheck = await query(
+      'SELECT id FROM guest WHERE id = $1 AND event_id = $2',
+      [guest_id, event.id]
     );
 
-    const newGuest = insertResult.rows[0];
+    if (guestCheck.rows.length === 0) {
+      return res.json({
+        return_code: 'GUEST_NOT_FOUND',
+        message: 'Guest not found',
+      });
+    }
+
+    // ---------------------------------------------------------------
+    // Update the guest
+    // ---------------------------------------------------------------
+    const updateResult = await query(
+      `UPDATE guest
+       SET name = $1, food_order = $2, dietary_notes = $3
+       WHERE id = $4
+       RETURNING id, name, food_order, dietary_notes, created_at`,
+      [trimmedName, trimmedFoodOrder, trimmedDietaryNotes, guest_id]
+    );
+
+    const updatedGuest = updateResult.rows[0];
 
     // ---------------------------------------------------------------
     // Return success response with guest details
@@ -129,16 +147,16 @@ router.post('/add', optionalAuth, async (req, res) => {
     return res.json({
       return_code: 'SUCCESS',
       guest: {
-        id: newGuest.id,
-        name: newGuest.name,
-        food_order: newGuest.food_order,
-        dietary_notes: newGuest.dietary_notes,
-        created_at: newGuest.created_at,
+        id: updatedGuest.id,
+        name: updatedGuest.name,
+        food_order: updatedGuest.food_order,
+        dietary_notes: updatedGuest.dietary_notes,
+        created_at: updatedGuest.created_at,
       },
     });
 
   } catch (error) {
-    console.error('Add guest error:', error);
+    console.error('Edit guest error:', error);
     return res.json({
       return_code: 'SERVER_ERROR',
       message: 'An unexpected error occurred',

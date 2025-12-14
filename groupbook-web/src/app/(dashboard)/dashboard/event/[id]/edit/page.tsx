@@ -2,21 +2,23 @@
 
 /*
 =======================================================================================================================================
-Create Event Page
+Edit Event Page
 =======================================================================================================================================
-Purpose: Form for restaurant staff to create a new group booking event.
+Purpose: Form for restaurant staff to edit an existing group booking event.
 =======================================================================================================================================
 */
 
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/context/AuthContext';
-import { createEvent } from '@/lib/api';
+import { getEvent, updateEvent } from '@/lib/api';
 
-export default function CreateEventPage() {
+export default function EditEventPage() {
   const { user, isLoading } = useAuth();
   const router = useRouter();
+  const params = useParams();
+  const eventId = Number(params.id);
 
   const [eventName, setEventName] = useState('');
   const [eventDateTime, setEventDateTime] = useState('');
@@ -25,6 +27,7 @@ export default function CreateEventPage() {
   const [partyLeadEmail, setPartyLeadEmail] = useState('');
   const [partyLeadPhone, setPartyLeadPhone] = useState('');
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Redirect to login if not authenticated
@@ -34,32 +37,71 @@ export default function CreateEventPage() {
     }
   }, [user, isLoading, router]);
 
+  // Fetch event data when authenticated
+  useEffect(() => {
+    const fetchEvent = async () => {
+      setLoading(true);
+      setError('');
+
+      const result = await getEvent(eventId);
+
+      if (result.success && result.data) {
+        const event = result.data.event;
+        setEventName(event.event_name);
+        // Convert ISO datetime to local datetime-local format
+        setEventDateTime(formatDateTimeForInput(event.event_date_time));
+        setCutoffDatetime(event.cutoff_datetime ? formatDateTimeForInput(event.cutoff_datetime) : '');
+        setPartyLeadName(event.party_lead_name || '');
+        setPartyLeadEmail(event.party_lead_email || '');
+        setPartyLeadPhone(event.party_lead_phone || '');
+      } else {
+        setError(result.error || 'Failed to load event');
+      }
+
+      setLoading(false);
+    };
+
+    if (user && eventId) {
+      fetchEvent();
+    }
+  }, [user, eventId]);
+
+  // Convert ISO datetime string to datetime-local input format (YYYY-MM-DDTHH:MM)
+  const formatDateTimeForInput = (isoString: string): string => {
+    const date = new Date(isoString);
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    const hours = String(date.getHours()).padStart(2, '0');
+    const minutes = String(date.getMinutes()).padStart(2, '0');
+    return `${year}-${month}-${day}T${hours}:${minutes}`;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
     setIsSubmitting(true);
 
-    // Call the create event API
-    const result = await createEvent({
+    const result = await updateEvent({
+      event_id: eventId,
       event_name: eventName,
       event_date_time: eventDateTime,
-      cutoff_datetime: cutoffDatetime || undefined,
-      party_lead_name: partyLeadName || undefined,
-      party_lead_email: partyLeadEmail || undefined,
-      party_lead_phone: partyLeadPhone || undefined,
+      cutoff_datetime: cutoffDatetime || null,
+      party_lead_name: partyLeadName || null,
+      party_lead_email: partyLeadEmail || null,
+      party_lead_phone: partyLeadPhone || null,
     });
 
     if (result.success) {
-      // Redirect to dashboard on success
-      router.push('/dashboard');
+      router.push(`/dashboard/event/${eventId}`);
     } else {
-      setError(result.error || 'Failed to create event');
+      setError(result.error || 'Failed to update event');
       setIsSubmitting(false);
     }
   };
 
-  // Show loading state while checking auth
-  if (isLoading) {
+  // Show loading state while checking auth or fetching data
+  if (isLoading || loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
         <p className="text-gray-500 text-sm md:text-base">Loading...</p>
@@ -78,10 +120,10 @@ export default function CreateEventPage() {
       <header className="bg-white shadow">
         <div className="max-w-7xl mx-auto px-4 py-4 sm:px-6 lg:px-8">
           <div className="flex items-center gap-3 md:gap-4">
-            <Link href="/dashboard" className="text-sm md:text-base text-blue-600 hover:text-blue-800 flex-shrink-0">
+            <Link href={`/dashboard/event/${eventId}`} className="text-sm md:text-base text-blue-600 hover:text-blue-800 flex-shrink-0">
               &larr; Back
             </Link>
-            <h1 className="text-lg sm:text-xl md:text-2xl font-bold text-gray-900">Create New Event</h1>
+            <h1 className="text-lg sm:text-xl md:text-2xl font-bold text-gray-900">Edit Event</h1>
           </div>
         </div>
       </header>
@@ -202,7 +244,7 @@ export default function CreateEventPage() {
             {/* Submit Button */}
             <div className="flex flex-col-reverse sm:flex-row gap-3 md:gap-4 pt-4">
               <Link
-                href="/dashboard"
+                href={`/dashboard/event/${eventId}`}
                 className="flex-1 py-2 md:py-2.5 px-4 border border-gray-300 rounded-md shadow-sm text-sm md:text-base font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 text-center"
               >
                 Cancel
@@ -212,7 +254,7 @@ export default function CreateEventPage() {
                 disabled={isSubmitting}
                 className="flex-1 py-2 md:py-2.5 px-4 border border-transparent rounded-md shadow-sm text-sm md:text-base font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {isSubmitting ? 'Creating...' : 'Create Event'}
+                {isSubmitting ? 'Saving...' : 'Save Changes'}
               </button>
             </div>
           </form>

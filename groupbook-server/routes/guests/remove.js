@@ -1,35 +1,28 @@
 /*
 =======================================================================================================================================
-API Route: add_guest
+API Route: remove_guest
 =======================================================================================================================================
-Method: POST
-Purpose: Allows a guest to add themselves to an event using the public link_token.
-         No authentication required. Enforces cutoff datetime.
+Method: DELETE
+Purpose: Allows anyone to remove a guest using the public link_token.
+         No authentication required. Enforces cutoff datetime and lock status.
 =======================================================================================================================================
 Request Payload:
 {
   "link_token": "a1b2c3d4e5f6...",    // string, required - event's public link
-  "name": "John Smith",               // string, required - guest's name
-  "food_order": "Steak pie",          // string, optional - food order
-  "dietary_notes": "Nut allergy"      // string, optional - dietary requirements
+  "guest_id": 1                       // number, required - guest to remove
 }
 
 Success Response:
 {
   "return_code": "SUCCESS",
-  "guest": {
-    "id": 1,
-    "name": "John Smith",
-    "food_order": "Steak pie",
-    "dietary_notes": "Nut allergy",
-    "created_at": "2025-01-10T14:30:00.000Z"
-  }
+  "message": "Guest removed"
 }
 =======================================================================================================================================
 Return Codes:
 "SUCCESS"
 "MISSING_FIELDS"
 "EVENT_NOT_FOUND"
+"GUEST_NOT_FOUND"
 "REGISTRATION_CLOSED"
 "REGISTRATION_LOCKED"
 "SERVER_ERROR"
@@ -43,25 +36,21 @@ const { query } = require('../../database');
 const { optionalAuth } = require('../../middleware/auth');
 const { logApiCall } = require('../../utils/apiLogger');
 
-router.post('/add', optionalAuth, async (req, res) => {
-  logApiCall('add_guest');
+router.delete('/remove', optionalAuth, async (req, res) => {
+  logApiCall('remove_guest');
 
   try {
-    const { link_token, name, food_order, dietary_notes } = req.body;
+    const { link_token, guest_id } = req.body;
 
     // ---------------------------------------------------------------
     // Validate required fields
     // ---------------------------------------------------------------
-    if (!link_token || !name || !name.trim()) {
+    if (!link_token || !guest_id) {
       return res.json({
         return_code: 'MISSING_FIELDS',
-        message: 'Link token and name are required',
+        message: 'Link token and guest ID are required',
       });
     }
-
-    const trimmedName = name.trim();
-    const trimmedFoodOrder = food_order ? food_order.trim() : null;
-    const trimmedDietaryNotes = dietary_notes ? dietary_notes.trim() : null;
 
     // ---------------------------------------------------------------
     // Find the event by link_token
@@ -112,33 +101,35 @@ router.post('/add', optionalAuth, async (req, res) => {
     }
 
     // ---------------------------------------------------------------
-    // Insert the new guest
+    // Check guest exists and belongs to this event
     // ---------------------------------------------------------------
-    const insertResult = await query(
-      `INSERT INTO guest (event_id, name, food_order, dietary_notes)
-       VALUES ($1, $2, $3, $4)
-       RETURNING id, name, food_order, dietary_notes, created_at`,
-      [event.id, trimmedName, trimmedFoodOrder, trimmedDietaryNotes]
+    const guestCheck = await query(
+      'SELECT id FROM guest WHERE id = $1 AND event_id = $2',
+      [guest_id, event.id]
     );
 
-    const newGuest = insertResult.rows[0];
+    if (guestCheck.rows.length === 0) {
+      return res.json({
+        return_code: 'GUEST_NOT_FOUND',
+        message: 'Guest not found',
+      });
+    }
 
     // ---------------------------------------------------------------
-    // Return success response with guest details
+    // Delete the guest
+    // ---------------------------------------------------------------
+    await query('DELETE FROM guest WHERE id = $1', [guest_id]);
+
+    // ---------------------------------------------------------------
+    // Return success response
     // ---------------------------------------------------------------
     return res.json({
       return_code: 'SUCCESS',
-      guest: {
-        id: newGuest.id,
-        name: newGuest.name,
-        food_order: newGuest.food_order,
-        dietary_notes: newGuest.dietary_notes,
-        created_at: newGuest.created_at,
-      },
+      message: 'Guest removed',
     });
 
   } catch (error) {
-    console.error('Add guest error:', error);
+    console.error('Remove guest error:', error);
     return res.json({
       return_code: 'SERVER_ERROR',
       message: 'An unexpected error occurred',

@@ -47,6 +47,7 @@ export interface Event {
   link_token: string;
   restaurant_name?: string;
   guest_count?: number;
+  is_locked?: boolean;
   created_at: string;
 }
 
@@ -220,6 +221,132 @@ export async function createEvent(
   }
 }
 
+export interface UpdateEventParams {
+  event_id: number;
+  event_name: string;
+  event_date_time: string;
+  cutoff_datetime?: string | null;
+  party_lead_name?: string | null;
+  party_lead_email?: string | null;
+  party_lead_phone?: string | null;
+}
+
+/*
+ * Update Event - Update an existing event's details
+ * Returns the updated event on success, error info on failure
+ */
+export async function updateEvent(
+  params: UpdateEventParams
+): Promise<ApiResponse<{ event: Event }>> {
+  try {
+    const response = await apiCall<{ event?: Event; message?: string }>(
+      '/api/events/update',
+      {
+        method: 'PUT',
+        body: JSON.stringify(params),
+      }
+    );
+
+    if (response.return_code !== 'SUCCESS') {
+      return {
+        success: false,
+        error: response.message || 'Failed to update event',
+        return_code: response.return_code,
+      };
+    }
+
+    return {
+      success: true,
+      data: {
+        event: response.event!,
+      },
+    };
+  } catch (error) {
+    return {
+      success: false,
+      error: 'Network error - please check your connection',
+    };
+  }
+}
+
+/*
+ * Delete Event - Permanently delete an event and all its guests
+ * Returns success status
+ */
+export async function deleteEvent(
+  eventId: number
+): Promise<ApiResponse<{ message: string }>> {
+  try {
+    const response = await apiCall<{ message?: string }>(
+      '/api/events/delete',
+      {
+        method: 'DELETE',
+        body: JSON.stringify({ event_id: eventId }),
+      }
+    );
+
+    if (response.return_code !== 'SUCCESS') {
+      return {
+        success: false,
+        error: response.message || 'Failed to delete event',
+        return_code: response.return_code,
+      };
+    }
+
+    return {
+      success: true,
+      data: {
+        message: response.message || 'Event deleted successfully',
+      },
+    };
+  } catch (error) {
+    return {
+      success: false,
+      error: 'Network error - please check your connection',
+    };
+  }
+}
+
+/*
+ * Toggle Event Lock - Lock or unlock an event
+ * When locked, guests cannot add/edit/remove themselves
+ * Returns updated lock status on success, error info on failure
+ */
+export async function toggleEventLock(
+  eventId: number,
+  isLocked: boolean
+): Promise<ApiResponse<{ event: { id: number; is_locked: boolean } }>> {
+  try {
+    const response = await apiCall<{ event?: { id: number; is_locked: boolean }; message?: string }>(
+      '/api/events/lock',
+      {
+        method: 'PUT',
+        body: JSON.stringify({ event_id: eventId, is_locked: isLocked }),
+      }
+    );
+
+    if (response.return_code !== 'SUCCESS') {
+      return {
+        success: false,
+        error: response.message || 'Failed to update event lock status',
+        return_code: response.return_code,
+      };
+    }
+
+    return {
+      success: true,
+      data: {
+        event: response.event!,
+      },
+    };
+  } catch (error) {
+    return {
+      success: false,
+      error: 'Network error - please check your connection',
+    };
+  }
+}
+
 /*
  * List Events - Get all events for the authenticated user
  * Returns array of events on success, error info on failure
@@ -297,6 +424,8 @@ export async function getEvent(eventId: number): Promise<ApiResponse<{ event: Ev
 export interface Guest {
   id: number;
   name: string;
+  food_order: string | null;
+  dietary_notes: string | null;
   created_at: string;
 }
 
@@ -345,16 +474,19 @@ export interface PublicEvent {
   event_date_time: string;
   cutoff_datetime: string | null;
   restaurant_name: string;
+  menu_link: string | null;
+  is_locked: boolean;
   guest_count: number;
 }
 
 /*
- * Get Public Event - Get event details by link_token (no auth required)
- * Used by guests to view event before joining
+ * Get Public Event - Get event details and guests by link_token
+ * Auth is optional - if authenticated and owner, is_owner will be true
+ * Used by guests to view event and attendee list
  */
-export async function getPublicEvent(linkToken: string): Promise<ApiResponse<{ event: PublicEvent }>> {
+export async function getPublicEvent(linkToken: string): Promise<ApiResponse<{ event: PublicEvent; guests: Guest[]; is_owner: boolean }>> {
   try {
-    const response = await apiCall<{ event?: PublicEvent; message?: string }>(
+    const response = await apiCall<{ event?: PublicEvent; guests?: Guest[]; is_owner?: boolean; message?: string }>(
       `/api/events/public/${linkToken}`,
       {
         method: 'GET',
@@ -373,6 +505,8 @@ export async function getPublicEvent(linkToken: string): Promise<ApiResponse<{ e
       success: true,
       data: {
         event: response.event!,
+        guests: response.guests || [],
+        is_owner: response.is_owner || false,
       },
     };
   } catch (error) {
@@ -389,14 +523,21 @@ export async function getPublicEvent(linkToken: string): Promise<ApiResponse<{ e
  */
 export async function addGuest(
   linkToken: string,
-  name: string
+  name: string,
+  foodOrder?: string,
+  dietaryNotes?: string
 ): Promise<ApiResponse<{ guest: Guest }>> {
   try {
     const response = await apiCall<{ guest?: Guest; message?: string }>(
       '/api/guests/add',
       {
         method: 'POST',
-        body: JSON.stringify({ link_token: linkToken, name }),
+        body: JSON.stringify({
+          link_token: linkToken,
+          name,
+          food_order: foodOrder || null,
+          dietary_notes: dietaryNotes || null,
+        }),
       }
     );
 
@@ -413,6 +554,93 @@ export async function addGuest(
       data: {
         guest: response.guest!,
       },
+    };
+  } catch (error) {
+    return {
+      success: false,
+      error: 'Network error - please check your connection',
+    };
+  }
+}
+
+/*
+ * Edit Guest - Edit a guest's details using link_token (no auth required)
+ * Used by anyone to update guest information
+ */
+export async function editGuest(
+  linkToken: string,
+  guestId: number,
+  name: string,
+  foodOrder?: string,
+  dietaryNotes?: string
+): Promise<ApiResponse<{ guest: Guest }>> {
+  try {
+    const response = await apiCall<{ guest?: Guest; message?: string }>(
+      '/api/guests/edit',
+      {
+        method: 'PUT',
+        body: JSON.stringify({
+          link_token: linkToken,
+          guest_id: guestId,
+          name,
+          food_order: foodOrder || null,
+          dietary_notes: dietaryNotes || null,
+        }),
+      }
+    );
+
+    if (response.return_code !== 'SUCCESS') {
+      return {
+        success: false,
+        error: response.message || 'Failed to update guest',
+        return_code: response.return_code,
+      };
+    }
+
+    return {
+      success: true,
+      data: {
+        guest: response.guest!,
+      },
+    };
+  } catch (error) {
+    return {
+      success: false,
+      error: 'Network error - please check your connection',
+    };
+  }
+}
+
+/*
+ * Remove Guest - Remove a guest from an event using link_token (no auth required)
+ * Used by anyone to remove a guest
+ */
+export async function removeGuest(
+  linkToken: string,
+  guestId: number
+): Promise<ApiResponse<void>> {
+  try {
+    const response = await apiCall<{ message?: string }>(
+      '/api/guests/remove',
+      {
+        method: 'DELETE',
+        body: JSON.stringify({
+          link_token: linkToken,
+          guest_id: guestId,
+        }),
+      }
+    );
+
+    if (response.return_code !== 'SUCCESS') {
+      return {
+        success: false,
+        error: response.message || 'Failed to remove guest',
+        return_code: response.return_code,
+      };
+    }
+
+    return {
+      success: true,
     };
   } catch (error) {
     return {

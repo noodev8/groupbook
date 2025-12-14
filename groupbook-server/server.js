@@ -39,8 +39,13 @@ const createEventRoute = require('./routes/events/create');
 const listEventsRoute = require('./routes/events/list');
 const getEventRoute = require('./routes/events/get');
 const getEventPublicRoute = require('./routes/events/getPublic');
+const updateEventRoute = require('./routes/events/update');
+const deleteEventRoute = require('./routes/events/delete');
+const lockEventRoute = require('./routes/events/lock');
 const listGuestsRoute = require('./routes/guests/list');
 const addGuestRoute = require('./routes/guests/add');
+const editGuestRoute = require('./routes/guests/edit');
+const removeGuestRoute = require('./routes/guests/remove');
 
 // =======================================================================
 // Route Registration
@@ -55,10 +60,15 @@ app.use('/api/events', createEventRoute);
 app.use('/api/events', listEventsRoute);
 app.use('/api/events', getEventRoute);
 app.use('/api/events', getEventPublicRoute);
+app.use('/api/events', updateEventRoute);
+app.use('/api/events', deleteEventRoute);
+app.use('/api/events', lockEventRoute);
 
 // Guest routes
 app.use('/api/guests', listGuestsRoute);
 app.use('/api/guests', addGuestRoute);
+app.use('/api/guests', editGuestRoute);
+app.use('/api/guests', removeGuestRoute);
 
 // =======================================================================
 // Health Check Endpoint

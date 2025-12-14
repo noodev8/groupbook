@@ -54,7 +54,7 @@ router.get('/get/:id', verifyToken, async (req, res) => {
     const eventResult = await query(
       `SELECT id, app_user_id, event_name, event_date_time, cutoff_datetime,
               party_lead_name, party_lead_email, party_lead_phone,
-              link_token, restaurant_name, created_at
+              link_token, restaurant_name, is_locked, created_at
        FROM event
        WHERE id = $1`,
       [eventId]
@@ -95,6 +95,7 @@ router.get('/get/:id', verifyToken, async (req, res) => {
         party_lead_phone: event.party_lead_phone,
         link_token: event.link_token,
         restaurant_name: event.restaurant_name,
+        is_locked: event.is_locked,
         created_at: event.created_at,
       },
     });

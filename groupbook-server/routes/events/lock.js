@@ -1,36 +1,28 @@
 /*
 =======================================================================================================================================
-API Route: list_guests
+API Route: toggle_event_lock
 =======================================================================================================================================
-Method: GET
-Purpose: Retrieves all guests for a specific event.
-         Verifies the authenticated user owns the event before returning guests.
+Method: PUT
+Purpose: Toggles the is_locked status of an event. Only the event owner can lock/unlock their events.
 =======================================================================================================================================
-Request: GET /api/guests/list/:event_id
+Request Payload:
+{
+  "event_id": 1,        // integer, required
+  "is_locked": true     // boolean, required
+}
 
 Success Response:
 {
   "return_code": "SUCCESS",
-  "guests": [
-    {
-      "id": 1,
-      "name": "John Smith",
-      "food_order": "Steak pie",
-      "dietary_notes": "Nut allergy",
-      "created_at": "2025-01-10T14:30:00.000Z"
-    },
-    {
-      "id": 2,
-      "name": "Jane Doe",
-      "food_order": "Veggie lasagne",
-      "dietary_notes": null,
-      "created_at": "2025-01-10T15:45:00.000Z"
-    }
-  ]
+  "event": {
+    "id": 1,
+    "is_locked": true
+  }
 }
 =======================================================================================================================================
 Return Codes:
 "SUCCESS"
+"MISSING_FIELDS"
 "EVENT_NOT_FOUND"
 "FORBIDDEN"
 "UNAUTHORIZED"
@@ -45,60 +37,68 @@ const { query } = require('../../database');
 const { verifyToken } = require('../../middleware/auth');
 const { logApiCall } = require('../../utils/apiLogger');
 
-router.get('/list/:event_id', verifyToken, async (req, res) => {
-  logApiCall('list_guests');
+router.put('/lock', verifyToken, async (req, res) => {
+  logApiCall('toggle_event_lock');
 
   try {
-    const eventId = req.params.event_id;
+    const { event_id, is_locked } = req.body;
     const userId = req.user.id;
 
     // ---------------------------------------------------------------
-    // First verify the event exists and belongs to the user
+    // Validate required fields
     // ---------------------------------------------------------------
-    const eventResult = await query(
+    if (!event_id || typeof is_locked !== 'boolean') {
+      return res.json({
+        return_code: 'MISSING_FIELDS',
+        message: 'Event ID and is_locked (boolean) are required',
+      });
+    }
+
+    // ---------------------------------------------------------------
+    // Check if event exists and belongs to the authenticated user
+    // ---------------------------------------------------------------
+    const eventCheck = await query(
       'SELECT id, app_user_id FROM event WHERE id = $1',
-      [eventId]
+      [event_id]
     );
 
-    if (eventResult.rows.length === 0) {
+    if (eventCheck.rows.length === 0) {
       return res.json({
         return_code: 'EVENT_NOT_FOUND',
         message: 'Event not found',
       });
     }
 
-    const event = eventResult.rows[0];
-
-    // Check ownership
-    if (event.app_user_id !== userId) {
+    if (eventCheck.rows[0].app_user_id !== userId) {
       return res.json({
         return_code: 'FORBIDDEN',
-        message: 'You do not have permission to view guests for this event',
+        message: 'You do not have permission to modify this event',
       });
     }
 
     // ---------------------------------------------------------------
-    // Fetch all guests for this event
-    // Ordered by created_at so newest guests appear last
+    // Update the is_locked status
     // ---------------------------------------------------------------
-    const guestsResult = await query(
-      `SELECT id, name, food_order, dietary_notes, created_at
-       FROM guest
-       WHERE event_id = $1
-       ORDER BY created_at ASC`,
-      [eventId]
+    const updateResult = await query(
+      'UPDATE event SET is_locked = $1 WHERE id = $2 RETURNING id, is_locked',
+      [is_locked, event_id]
     );
 
+    const updatedEvent = updateResult.rows[0];
+
     // ---------------------------------------------------------------
-    // Return success response with guests list
+    // Return success response
     // ---------------------------------------------------------------
     return res.json({
       return_code: 'SUCCESS',
-      guests: guestsResult.rows,
+      event: {
+        id: updatedEvent.id,
+        is_locked: updatedEvent.is_locked,
+      },
     });
 
   } catch (error) {
-    console.error('List guests error:', error);
+    console.error('Toggle event lock error:', error);
     return res.json({
       return_code: 'SERVER_ERROR',
       message: 'An unexpected error occurred',

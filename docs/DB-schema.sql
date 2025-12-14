@@ -5,7 +5,7 @@
 -- Dumped from database version 16.11 (Ubuntu 16.11-0ubuntu0.24.04.1)
 -- Dumped by pg_dump version 17.4
 
--- Started on 2025-12-13 22:47:51
+-- Started on 2025-12-14 11:19:58
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
@@ -92,7 +92,8 @@ CREATE TABLE public.event (
     party_lead_email character varying(255),
     party_lead_phone character varying(50),
     is_locked boolean DEFAULT false,
-    staff_notes text
+    staff_notes text,
+    menu_link text
 );
 
 
@@ -133,8 +134,9 @@ CREATE TABLE public.guest (
     event_id integer NOT NULL,
     name character varying(255) NOT NULL,
     created_at timestamp without time zone DEFAULT now() NOT NULL,
-    food_choice text,
-    edit_token character varying(64)
+    food_order text,
+    edit_token character varying(64),
+    dietary_notes text
 );
 
 
@@ -272,7 +274,7 @@ ALTER DEFAULT PRIVILEGES FOR ROLE postgres IN SCHEMA public GRANT ALL ON SEQUENC
 ALTER DEFAULT PRIVILEGES FOR ROLE postgres IN SCHEMA public GRANT SELECT,INSERT,REFERENCES,DELETE,TRIGGER,TRUNCATE,UPDATE ON TABLES TO groupbook_user;
 
 
--- Completed on 2025-12-13 22:47:52
+-- Completed on 2025-12-14 11:19:59
 
 --
 -- PostgreSQL database dump complete
