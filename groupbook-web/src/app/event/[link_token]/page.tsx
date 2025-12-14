@@ -3,7 +3,18 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
+import Image from 'next/image';
 import { getPublicEvent, addGuest, editGuest, removeGuest, PublicEvent, Guest } from '@/lib/api';
+
+// =============================================================================
+// DEMO BRANDING - Hardcoded for The Nags Head experiment
+// In production, this would come from the database based on restaurant settings
+// =============================================================================
+const DEMO_BRANDING = {
+  enabled: false, // Set to true to preview branding demo
+  logoUrl: '/demo-branding/Nagshead-logo.svg',
+  heroImageUrl: '/demo-branding/Homepagebanner2.jpg',
+};
 
 export default function PublicEventPage() {
   const params = useParams();
@@ -22,6 +33,9 @@ export default function PublicEventPage() {
   const [editingGuestId, setEditingGuestId] = useState<number | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState('');
+
+  // Use branding for demo
+  const brand = DEMO_BRANDING;
 
   const fetchEvent = useCallback(async () => {
     setLoading(true);
@@ -172,6 +186,235 @@ export default function PublicEventPage() {
     );
   }
 
+  // =============================================================================
+  // BRANDED VERSION - Simple: just logo + hero image, rest is original design
+  // =============================================================================
+  if (brand.enabled) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        {/* Hero Header with Background Image */}
+        <header className="relative">
+          {/* Hero Image */}
+          <div className="relative h-40 md:h-52 lg:h-64 overflow-hidden">
+            <Image
+              src={brand.heroImageUrl}
+              alt={event.restaurant_name}
+              fill
+              className="object-cover"
+              priority
+            />
+            {/* Gradient Overlay */}
+            <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-black/50" />
+
+            {/* Back Button - for owners */}
+            {isOwner && (
+              <div className="absolute top-4 left-4 z-10">
+                <Link
+                  href={`/dashboard/event/${event.id}`}
+                  className="inline-flex items-center px-3 py-1.5 rounded-full text-sm font-medium bg-white/90 text-gray-700 hover:bg-white transition-colors shadow-sm"
+                >
+                  ← Back to Event
+                </Link>
+              </div>
+            )}
+
+            {/* Logo positioned on the image */}
+            <div className="absolute bottom-4 left-1/2 -translate-x-1/2">
+              <Image
+                src={brand.logoUrl}
+                alt={event.restaurant_name}
+                width={80}
+                height={80}
+                className="w-16 h-16 md:w-20 md:h-20 drop-shadow-lg"
+              />
+            </div>
+          </div>
+        </header>
+
+        {/* Rest is original design */}
+        <main className="px-4 py-4 md:py-6 lg:py-8 max-w-lg md:max-w-2xl lg:max-w-4xl mx-auto space-y-4 md:space-y-6">
+          {/* Event Info */}
+          <div className="bg-white rounded-lg shadow p-4 md:p-6">
+            <h1 className="text-xl md:text-2xl lg:text-3xl font-bold text-gray-900 mb-2">{event.event_name}</h1>
+            <p className="text-gray-700 md:text-lg">{formatDateTime(event.event_date_time)}</p>
+
+            {event.menu_link && (
+              <a
+                href={event.menu_link}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-block mt-3 md:mt-4 text-blue-600 text-sm md:text-base font-medium hover:underline"
+              >
+                View Menu (PDF) →
+              </a>
+            )}
+          </div>
+
+          {/* Registration Status - only show for non-owners when closed */}
+          {!isOwner && isClosedForGuests() && (
+            <div className="bg-red-50 border border-red-200 rounded-lg p-4 md:p-5">
+              <p className="text-red-800 text-sm md:text-base font-medium">
+                {event.is_locked ? 'Registration is locked' : 'Registration has closed'}
+              </p>
+              {event.cutoff_datetime && !event.is_locked && (
+                <p className="text-red-600 text-xs md:text-sm mt-1">
+                  Cut-off was {formatDateTime(event.cutoff_datetime)}
+                </p>
+              )}
+            </div>
+          )}
+
+          {/* Add/Edit Form */}
+          {canEdit() && (
+            <div className="bg-white rounded-lg shadow p-4 md:p-6">
+              <h2 className="text-sm md:text-base font-semibold text-gray-900 mb-1">
+                {editingGuestId ? 'Update Entry' : 'Add / Update Entry'}
+              </h2>
+              {event.cutoff_datetime && (
+                <p className="text-xs md:text-sm text-gray-500 mb-4">
+                  Cut-off: {formatDateTime(event.cutoff_datetime)}
+                </p>
+              )}
+
+              <form onSubmit={handleSubmit} className="space-y-4 md:space-y-5">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
+                  <div>
+                    <label htmlFor="name" className="block text-sm md:text-base font-medium text-gray-700 mb-1">
+                      Name *
+                    </label>
+                    <input
+                      type="text"
+                      id="name"
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                      placeholder="Your name"
+                      className="w-full px-3 py-2 md:py-2.5 border border-gray-300 rounded-md text-sm md:text-base focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      disabled={submitting}
+                    />
+                  </div>
+
+                  <div>
+                    <label htmlFor="dietaryNotes" className="block text-sm md:text-base font-medium text-gray-700 mb-1">
+                      Dietary requirements / allergies
+                    </label>
+                    <input
+                      type="text"
+                      id="dietaryNotes"
+                      value={dietaryNotes}
+                      onChange={(e) => setDietaryNotes(e.target.value)}
+                      placeholder="e.g. Vegetarian, nut allergy"
+                      className="w-full px-3 py-2 md:py-2.5 border border-gray-300 rounded-md text-sm md:text-base focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      disabled={submitting}
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label htmlFor="foodOrder" className="block text-sm md:text-base font-medium text-gray-700 mb-1">
+                    What would you like to order?
+                  </label>
+                  <textarea
+                    id="foodOrder"
+                    value={foodOrder}
+                    onChange={(e) => setFoodOrder(e.target.value)}
+                    placeholder="e.g. Steak pie + chips"
+                    rows={2}
+                    className="w-full px-3 py-2 md:py-2.5 border border-gray-300 rounded-md text-sm md:text-base focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none"
+                    disabled={submitting}
+                  />
+                </div>
+
+                {submitError && (
+                  <div className="bg-red-50 border border-red-200 text-red-700 px-3 py-2 rounded text-sm md:text-base">
+                    {submitError}
+                  </div>
+                )}
+
+                <div className="flex gap-2 md:gap-3">
+                  <button
+                    type="submit"
+                    disabled={submitting}
+                    className="flex-1 md:flex-none px-4 md:px-6 py-2 md:py-2.5 bg-blue-600 text-white rounded-md text-sm md:text-base font-medium hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {submitting ? 'Saving...' : editingGuestId ? 'Update Entry' : 'Add Entry'}
+                  </button>
+                  {editingGuestId && (
+                    <button
+                      type="button"
+                      onClick={handleCancelEdit}
+                      className="px-4 md:px-6 py-2 md:py-2.5 bg-gray-100 text-gray-700 rounded-md text-sm md:text-base font-medium hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
+                    >
+                      Cancel
+                    </button>
+                  )}
+                </div>
+              </form>
+            </div>
+          )}
+
+          {/* Guest List */}
+          <div className="bg-white rounded-lg shadow p-4 md:p-6">
+            <h2 className="text-sm md:text-base font-semibold text-gray-900 mb-3 md:mb-4">
+              Current Group ({guests.length} attending)
+            </h2>
+
+            {guests.length === 0 ? (
+              <p className="text-gray-500 text-sm md:text-base">No guests yet. Be the first to join!</p>
+            ) : (
+              <ul className="divide-y divide-gray-100">
+                {guests.map((guest, index) => (
+                  <li key={guest.id} className="py-3 md:py-4 first:pt-0 last:pb-0">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium text-gray-900 text-sm md:text-base">
+                          {index + 1}. {guest.name}
+                        </p>
+                        {guest.food_order && (
+                          <p className="text-gray-600 text-sm md:text-base mt-1">{guest.food_order}</p>
+                        )}
+                        {guest.dietary_notes && (
+                          <p className="text-amber-600 text-xs md:text-sm mt-1 flex items-center gap-1">
+                            <span>⚠️</span> {guest.dietary_notes}
+                          </p>
+                        )}
+                      </div>
+                      {canEdit() && (
+                        <div className="flex gap-3 md:gap-4 flex-shrink-0">
+                          <button
+                            onClick={() => handleEdit(guest)}
+                            className="text-blue-600 text-xs md:text-sm font-medium hover:underline"
+                          >
+                            Edit
+                          </button>
+                          <button
+                            onClick={() => handleRemove(guest.id)}
+                            className="text-red-600 text-xs md:text-sm font-medium hover:underline"
+                          >
+                            Remove
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+
+          {/* Footer Note - only show for non-owners when closed */}
+          {!isOwner && isClosedForGuests() && (
+            <p className="text-center text-gray-500 text-xs md:text-sm px-4">
+              Editing is closed. Please contact the restaurant directly for changes.
+            </p>
+          )}
+        </main>
+      </div>
+    );
+  }
+
+  // =============================================================================
+  // ORIGINAL PLAIN VERSION
+  // =============================================================================
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
