@@ -12,7 +12,7 @@ import { useEffect, useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/context/AuthContext';
-import { getEvent, listGuests, deleteEvent, toggleEventLock, Event, Guest } from '@/lib/api';
+import { getEvent, listGuests, deleteEvent, toggleEventLock, sendEventInvite, Event, Guest } from '@/lib/api';
 
 export default function EventManagementPage() {
   const { user, isLoading } = useAuth();
@@ -28,6 +28,8 @@ export default function EventManagementPage() {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [isTogglingLock, setIsTogglingLock] = useState(false);
+  const [isSendingInvite, setIsSendingInvite] = useState(false);
+  const [inviteSent, setInviteSent] = useState(false);
 
   // Redirect to login if not authenticated
   useEffect(() => {
@@ -133,6 +135,23 @@ export default function EventManagementPage() {
       setError(result.error || 'Failed to update lock status');
     }
     setIsTogglingLock(false);
+  };
+
+  // Handle send invite
+  const handleSendInvite = async () => {
+    if (!event?.party_lead_email) return;
+    setIsSendingInvite(true);
+    setError('');
+
+    const result = await sendEventInvite(eventId);
+
+    if (result.success) {
+      setInviteSent(true);
+      setTimeout(() => setInviteSent(false), 3000);
+    } else {
+      setError(result.error || 'Failed to send invitation');
+    }
+    setIsSendingInvite(false);
   };
 
   // Show loading state while checking auth
@@ -296,6 +315,20 @@ export default function EventManagementPage() {
                 {linkCopied ? 'Copied!' : 'Copy'}
               </button>
             </div>
+            {event.party_lead_email && (
+              <div className="mt-4 pt-4 border-t border-gray-200">
+                <p className="text-xs md:text-sm text-gray-500 mb-2">
+                  Or send directly to the organiser:
+                </p>
+                <button
+                  onClick={handleSendInvite}
+                  disabled={isSendingInvite}
+                  className="w-full sm:w-auto px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 text-sm disabled:opacity-50"
+                >
+                  {isSendingInvite ? 'Sending...' : inviteSent ? 'Sent!' : `Email ${event.party_lead_email}`}
+                </button>
+              </div>
+            )}
           </div>
         </div>
 

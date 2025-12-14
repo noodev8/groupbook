@@ -42,6 +42,7 @@ const getEventPublicRoute = require('./routes/events/getPublic');
 const updateEventRoute = require('./routes/events/update');
 const deleteEventRoute = require('./routes/events/delete');
 const lockEventRoute = require('./routes/events/lock');
+const sendInviteRoute = require('./routes/events/sendInvite');
 const listGuestsRoute = require('./routes/guests/list');
 const addGuestRoute = require('./routes/guests/add');
 const editGuestRoute = require('./routes/guests/edit');
@@ -63,6 +64,7 @@ app.use('/api/events', getEventPublicRoute);
 app.use('/api/events', updateEventRoute);
 app.use('/api/events', deleteEventRoute);
 app.use('/api/events', lockEventRoute);
+app.use('/api/events', sendInviteRoute);
 
 // Guest routes
 app.use('/api/guests', listGuestsRoute);

@@ -348,6 +348,44 @@ export async function toggleEventLock(
 }
 
 /*
+ * Send Event Invite - Send email invitation to the party organiser
+ * Returns success message on success, error info on failure
+ */
+export async function sendEventInvite(
+  eventId: number
+): Promise<ApiResponse<{ message: string }>> {
+  try {
+    const response = await apiCall<{ message?: string }>(
+      '/api/events/sendInvite',
+      {
+        method: 'POST',
+        body: JSON.stringify({ event_id: eventId }),
+      }
+    );
+
+    if (response.return_code !== 'SUCCESS') {
+      return {
+        success: false,
+        error: response.message || 'Failed to send invitation',
+        return_code: response.return_code,
+      };
+    }
+
+    return {
+      success: true,
+      data: {
+        message: response.message || 'Invitation sent',
+      },
+    };
+  } catch (error) {
+    return {
+      success: false,
+      error: 'Network error - please check your connection',
+    };
+  }
+}
+
+/*
  * List Events - Get all events for the authenticated user
  * Returns array of events on success, error info on failure
  */
