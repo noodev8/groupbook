@@ -168,10 +168,10 @@ router.post('/sendInvite', verifyToken, async (req, res) => {
           </p>
         </div>
 
-        <h3 style="color: #1f2937; margin-top: 32px;">How to Collect Guest Orders</h3>
+        <h3 style="color: #1f2937; margin-top: 32px;">Guest List & Food Orders</h3>
 
         <p style="color: #374151; font-size: 16px; line-height: 1.6;">
-          Share the link below with your guests. They can use it to add their name, food order, and any dietary requirements:
+          Use the link below to add guests and collect food orders. You can fill this in yourself, or forward this email so guests can add their own details.
         </p>
 
         <div style="background-color: #dbeafe; border-radius: 8px; padding: 16px; margin: 16px 0; text-align: center;">
@@ -185,7 +185,7 @@ router.post('/sendInvite', verifyToken, async (req, res) => {
         </p>
 
         <p style="color: #374151; font-size: 16px; line-height: 1.6;">
-          You can view and edit the guest list at any time using the same link.
+          The guest list can be viewed and updated anytime using the same link.
         </p>
 
         <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 32px 0;">
@@ -212,15 +212,15 @@ Date: ${formattedDate}
 Time: ${formattedTime}
 Venue: ${event.restaurant_name}
 
-How to Collect Guest Orders
-----------------------------
-Share the link below with your guests. They can use it to add their name, food order, and any dietary requirements:
+Guest List & Food Orders
+------------------------
+Use the link below to add guests and collect food orders. You can fill this in yourself, or forward this email so guests can add their own details.
 
 ${shareableLink}
 
 ${cutoffText}
 
-You can view and edit the guest list at any time using the same link.
+The guest list can be viewed and updated anytime using the same link.
 
 If you have any questions, please contact ${event.restaurant_name} directly.
 
