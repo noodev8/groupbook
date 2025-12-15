@@ -16,6 +16,49 @@ import { getEvent, listGuests, deleteEvent, toggleEventLock, sendEventInvite, up
 
 const MAX_NOTES_LENGTH = 500;
 
+// Simple icon components for visual polish
+const CalendarIcon = () => (
+  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+  </svg>
+);
+
+const UserIcon = () => (
+  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+  </svg>
+);
+
+const LinkIcon = () => (
+  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+  </svg>
+);
+
+const NotesIcon = () => (
+  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+  </svg>
+);
+
+const UsersIcon = () => (
+  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+  </svg>
+);
+
+const LockIcon = () => (
+  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+  </svg>
+);
+
+const UnlockIcon = () => (
+  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 11V7a4 4 0 118 0m-4 8v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2z" />
+  </svg>
+);
+
 export default function EventManagementPage() {
   const { user, isLoading, logout } = useAuth();
   const router = useRouter();
@@ -89,16 +132,6 @@ export default function EventManagementPage() {
       year: 'numeric',
       hour: '2-digit',
       minute: '2-digit',
-    });
-  };
-
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('en-GB', {
-      weekday: 'short',
-      day: 'numeric',
-      month: 'short',
-      year: 'numeric',
     });
   };
 
@@ -197,8 +230,14 @@ export default function EventManagementPage() {
   // Show loading state while checking auth
   if (isLoading || loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
-        <p className="text-gray-500 text-sm md:text-base">Loading...</p>
+      <div className="min-h-screen flex items-center justify-center bg-slate-50 px-4">
+        <div className="flex items-center gap-3 text-slate-500">
+          <svg className="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
+            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+          </svg>
+          <span>Loading event...</span>
+        </div>
       </div>
     );
   }
@@ -209,18 +248,21 @@ export default function EventManagementPage() {
   }
 
   // Show error state
-  if (error) {
+  if (error && !event) {
     return (
-      <div className="min-h-screen bg-gray-50">
-        <header className="bg-white shadow">
-          <div className="max-w-7xl mx-auto px-4 py-4 sm:px-6 lg:px-8">
-            <Link href="/dashboard" className="text-sm md:text-base text-blue-600 hover:text-blue-800">
-              &larr; Back to Dashboard
+      <div className="min-h-screen bg-slate-50">
+        <header className="bg-white border-b border-slate-200">
+          <div className="max-w-6xl mx-auto px-4 py-4 sm:px-6 lg:px-8">
+            <Link href="/dashboard" className="inline-flex items-center gap-2 text-sm text-slate-600 hover:text-slate-900 transition-colors">
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+              </svg>
+              Back to Dashboard
             </Link>
           </div>
         </header>
-        <main className="max-w-7xl mx-auto px-4 py-6 md:py-8 sm:px-6 lg:px-8">
-          <div className="bg-red-50 border border-red-200 text-red-700 px-3 md:px-4 py-2 md:py-3 rounded text-sm md:text-base">
+        <main className="max-w-6xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
+          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
             {error}
           </div>
         </main>
@@ -233,35 +275,57 @@ export default function EventManagementPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-slate-50">
       {/* Header */}
-      <header className="bg-white shadow">
-        <div className="max-w-7xl mx-auto px-4 py-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between gap-3 md:gap-4">
-            <div className="flex items-center gap-3 md:gap-4 min-w-0">
-              <Link href="/dashboard" className="text-sm md:text-base text-blue-600 hover:text-blue-800 flex-shrink-0">
-                &larr; Back
-              </Link>
-              <h1 className="text-lg sm:text-xl md:text-2xl font-bold text-gray-900 truncate">{event.event_name}</h1>
+      <header className="bg-white border-b border-slate-200">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+          {/* Top bar with back link */}
+          <div className="py-3 border-b border-slate-100">
+            <Link href="/dashboard" className="inline-flex items-center gap-2 text-sm text-slate-600 hover:text-slate-900 transition-colors">
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+              </svg>
+              Back to Dashboard
+            </Link>
+          </div>
+
+          {/* Event title and actions */}
+          <div className="py-4 flex items-center justify-between gap-4">
+            <div className="flex items-center gap-3 min-w-0">
+              <h1 className="text-xl sm:text-2xl font-semibold text-slate-900 truncate">{event.event_name}</h1>
+              {event.is_locked && (
+                <span className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-xs font-medium bg-amber-100 text-amber-700 flex-shrink-0">
+                  <LockIcon />
+                  Locked
+                </span>
+              )}
             </div>
-            <div className="flex items-center gap-3 md:gap-4 flex-shrink-0">
+
+            {/* Action buttons */}
+            <div className="flex items-center gap-2 flex-shrink-0">
               <button
                 onClick={handleToggleLock}
                 disabled={isTogglingLock}
-                className="text-sm md:text-base text-gray-600 hover:text-gray-800 font-medium disabled:opacity-50"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-md transition-colors disabled:opacity-50"
               >
-                {isTogglingLock ? '...' : event.is_locked ? 'Unlock' : 'Lock'}
+                {isTogglingLock ? '...' : event.is_locked ? <><UnlockIcon /> Unlock</> : <><LockIcon /> Lock</>}
               </button>
               <Link
                 href={`/dashboard/event/${eventId}/edit`}
-                className="text-sm md:text-base text-blue-600 hover:text-blue-800 font-medium"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-md transition-colors"
               >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                </svg>
                 Edit
               </Link>
               <button
                 onClick={() => setShowDeleteConfirm(true)}
-                className="text-sm md:text-base text-red-600 hover:text-red-800 font-medium"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-red-600 hover:text-red-700 hover:bg-red-50 rounded-md transition-colors"
               >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                </svg>
                 Delete
               </button>
             </div>
@@ -269,179 +333,236 @@ export default function EventManagementPage() {
         </div>
       </header>
 
+      {/* Error banner */}
+      {error && (
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-6">
+          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
+            {error}
+          </div>
+        </div>
+      )}
+
       {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 py-6 md:py-8 sm:px-6 lg:px-8">
-        <div className="grid gap-4 md:gap-6 md:grid-cols-2">
+      <main className="max-w-6xl mx-auto px-4 py-6 sm:px-6 lg:px-8">
+        <div className="grid gap-5 md:grid-cols-2">
           {/* Event Details Card */}
-          <div className="bg-white rounded-lg shadow p-4 md:p-6">
-            <div className="flex items-center justify-between mb-3 md:mb-4">
-              <h2 className="text-base md:text-lg font-semibold text-gray-900">Event Details</h2>
-              {event.is_locked && (
-                <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-amber-100 text-amber-800">
-                  Locked
-                </span>
-              )}
+          <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+            <div className="px-5 py-4 border-b border-slate-100 flex items-center gap-3">
+              <div className="p-2 bg-blue-50 text-blue-600 rounded-lg">
+                <CalendarIcon />
+              </div>
+              <h2 className="font-semibold text-slate-900">Event Details</h2>
             </div>
-            <dl className="space-y-2 md:space-y-3">
-              <div>
-                <dt className="text-xs md:text-sm text-gray-500">Date & Time</dt>
-                <dd className="text-sm md:text-base text-gray-900">{formatDateTime(event.event_date_time)}</dd>
-              </div>
-              {event.cutoff_datetime && (
+            <div className="px-5 py-4">
+              <dl className="space-y-4">
                 <div>
-                  <dt className="text-xs md:text-sm text-gray-500">Guest Cutoff</dt>
-                  <dd className="text-sm md:text-base text-gray-900">{formatDateTime(event.cutoff_datetime)}</dd>
+                  <dt className="text-xs font-medium text-slate-500 uppercase tracking-wide">Date & Time</dt>
+                  <dd className="mt-1 text-sm text-slate-900">{formatDateTime(event.event_date_time)}</dd>
                 </div>
-              )}
-              <div>
-                <dt className="text-xs md:text-sm text-gray-500">Restaurant</dt>
-                <dd className="text-sm md:text-base text-gray-900">{event.restaurant_name}</dd>
-              </div>
-            </dl>
+                {event.cutoff_datetime && (
+                  <div>
+                    <dt className="text-xs font-medium text-slate-500 uppercase tracking-wide">Guest Cutoff</dt>
+                    <dd className="mt-1 text-sm text-slate-900">{formatDateTime(event.cutoff_datetime)}</dd>
+                  </div>
+                )}
+                <div>
+                  <dt className="text-xs font-medium text-slate-500 uppercase tracking-wide">Restaurant</dt>
+                  <dd className="mt-1 text-sm text-slate-900">{event.restaurant_name}</dd>
+                </div>
+              </dl>
+            </div>
           </div>
 
           {/* Party Lead Card */}
           {(event.party_lead_name || event.party_lead_email || event.party_lead_phone) && (
-            <div className="bg-white rounded-lg shadow p-4 md:p-6">
-              <h2 className="text-base md:text-lg font-semibold text-gray-900 mb-3 md:mb-4">Party Lead</h2>
-              <dl className="space-y-2 md:space-y-3">
-                {event.party_lead_name && (
-                  <div>
-                    <dt className="text-xs md:text-sm text-gray-500">Name</dt>
-                    <dd className="text-sm md:text-base text-gray-900">{event.party_lead_name}</dd>
-                  </div>
-                )}
-                {event.party_lead_email && (
-                  <div>
-                    <dt className="text-xs md:text-sm text-gray-500">Email</dt>
-                    <dd className="text-sm md:text-base text-gray-900">
-                      <a href={`mailto:${event.party_lead_email}`} className="text-blue-600 hover:text-blue-800 break-all">
-                        {event.party_lead_email}
-                      </a>
-                    </dd>
-                  </div>
-                )}
-                {event.party_lead_phone && (
-                  <div>
-                    <dt className="text-xs md:text-sm text-gray-500">Phone</dt>
-                    <dd className="text-sm md:text-base text-gray-900">
-                      <a href={`tel:${event.party_lead_phone}`} className="text-blue-600 hover:text-blue-800">
-                        {event.party_lead_phone}
-                      </a>
-                    </dd>
-                  </div>
-                )}
-              </dl>
+            <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+              <div className="px-5 py-4 border-b border-slate-100 flex items-center gap-3">
+                <div className="p-2 bg-emerald-50 text-emerald-600 rounded-lg">
+                  <UserIcon />
+                </div>
+                <h2 className="font-semibold text-slate-900">Party Lead</h2>
+              </div>
+              <div className="px-5 py-4">
+                <dl className="space-y-4">
+                  {event.party_lead_name && (
+                    <div>
+                      <dt className="text-xs font-medium text-slate-500 uppercase tracking-wide">Name</dt>
+                      <dd className="mt-1 text-sm text-slate-900">{event.party_lead_name}</dd>
+                    </div>
+                  )}
+                  {event.party_lead_email && (
+                    <div>
+                      <dt className="text-xs font-medium text-slate-500 uppercase tracking-wide">Email</dt>
+                      <dd className="mt-1 text-sm">
+                        <a href={`mailto:${event.party_lead_email}`} className="text-blue-600 hover:text-blue-800 hover:underline break-all transition-colors">
+                          {event.party_lead_email}
+                        </a>
+                      </dd>
+                    </div>
+                  )}
+                  {event.party_lead_phone && (
+                    <div>
+                      <dt className="text-xs font-medium text-slate-500 uppercase tracking-wide">Phone</dt>
+                      <dd className="mt-1 text-sm">
+                        <a href={`tel:${event.party_lead_phone}`} className="text-blue-600 hover:text-blue-800 hover:underline transition-colors">
+                          {event.party_lead_phone}
+                        </a>
+                      </dd>
+                    </div>
+                  )}
+                </dl>
+              </div>
             </div>
           )}
 
           {/* Shareable Link Card */}
-          <div className="bg-white rounded-lg shadow p-4 md:p-6">
-            <h2 className="text-base md:text-lg font-semibold text-gray-900 mb-3 md:mb-4">Shareable Link</h2>
-            <p className="text-xs md:text-sm text-gray-500 mb-3">
-              Share this link with the organiser or guests:
-            </p>
-            <div className="flex flex-col sm:flex-row gap-2">
-              <input
-                type="text"
-                readOnly
-                value={getShareableLink()}
-                className="flex-1 px-3 py-2 border border-gray-300 rounded-md bg-gray-50 text-xs md:text-sm text-gray-600"
-              />
-              <button
-                onClick={copyLink}
-                className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 text-sm flex-shrink-0"
-              >
-                {linkCopied ? 'Copied!' : 'Copy'}
-              </button>
+          <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+            <div className="px-5 py-4 border-b border-slate-100 flex items-center gap-3">
+              <div className="p-2 bg-violet-50 text-violet-600 rounded-lg">
+                <LinkIcon />
+              </div>
+              <h2 className="font-semibold text-slate-900">Shareable Link</h2>
             </div>
-            {event.party_lead_email && (
-              <div className="mt-4 pt-4 border-t border-gray-200">
-                <p className="text-xs md:text-sm text-gray-500 mb-2">
-                  Or send directly to the organiser:
-                </p>
+            <div className="px-5 py-4">
+              <p className="text-sm text-slate-500 mb-3">
+                Share this link with the organiser or guests:
+              </p>
+              <div className="flex flex-col sm:flex-row gap-2">
+                <input
+                  type="text"
+                  readOnly
+                  value={getShareableLink()}
+                  className="flex-1 px-3 py-2 border border-slate-200 rounded-lg bg-slate-50 text-sm text-slate-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
                 <button
-                  onClick={handleSendInvite}
-                  disabled={isSendingInvite}
-                  className="w-full sm:w-auto px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 text-sm disabled:opacity-50"
+                  onClick={copyLink}
+                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-all flex-shrink-0 ${
+                    linkCopied
+                      ? 'bg-emerald-500 text-white'
+                      : 'bg-blue-600 text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500'
+                  }`}
                 >
-                  {isSendingInvite ? 'Sending...' : inviteSent ? 'Sent!' : `Email ${event.party_lead_email}`}
+                  {linkCopied ? 'Copied!' : 'Copy Link'}
                 </button>
               </div>
-            )}
+              {event.party_lead_email && (
+                <div className="mt-4 pt-4 border-t border-slate-100">
+                  <p className="text-sm text-slate-500 mb-3">
+                    Or send directly to the organiser:
+                  </p>
+                  <button
+                    onClick={handleSendInvite}
+                    disabled={isSendingInvite}
+                    className={`w-full sm:w-auto px-4 py-2 rounded-lg text-sm font-medium transition-all disabled:opacity-50 ${
+                      inviteSent
+                        ? 'bg-emerald-500 text-white'
+                        : 'bg-emerald-600 text-white hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500'
+                    }`}
+                  >
+                    {isSendingInvite ? 'Sending...' : inviteSent ? 'Sent!' : `Email ${event.party_lead_email}`}
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
 
           {/* Staff Notes Card */}
-          <div className="bg-white rounded-lg shadow p-4 md:p-6">
-            <h2 className="text-base md:text-lg font-semibold text-gray-900 mb-3 md:mb-4">Staff Notes</h2>
-            <p className="text-xs md:text-sm text-gray-500 mb-3">
-              Internal notes visible only to staff (e.g., VIP, deposit paid, allergies discussed).
-            </p>
-            <textarea
-              value={staffNotes}
-              onChange={(e) => setStaffNotes(e.target.value.slice(0, MAX_NOTES_LENGTH))}
-              placeholder="Add notes about this event..."
-              rows={3}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none"
-            />
-            <div className="flex items-center justify-between mt-2">
-              <span className="text-xs text-gray-400">
-                {staffNotes.length}/{MAX_NOTES_LENGTH}
-              </span>
-              <button
-                onClick={handleSaveNotes}
-                disabled={isSavingNotes || !notesHaveChanged}
-                className="px-4 py-1.5 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 text-sm disabled:opacity-50"
-              >
-                {isSavingNotes ? 'Saving...' : 'Save'}
-              </button>
+          <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+            <div className="px-5 py-4 border-b border-slate-100 flex items-center gap-3">
+              <div className="p-2 bg-amber-50 text-amber-600 rounded-lg">
+                <NotesIcon />
+              </div>
+              <h2 className="font-semibold text-slate-900">Staff Notes</h2>
+            </div>
+            <div className="px-5 py-4">
+              <p className="text-sm text-slate-500 mb-3">
+                Internal notes visible only to staff (e.g., VIP, deposit paid).
+              </p>
+              <textarea
+                value={staffNotes}
+                onChange={(e) => setStaffNotes(e.target.value.slice(0, MAX_NOTES_LENGTH))}
+                placeholder="Add notes about this event..."
+                rows={3}
+                className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none transition-shadow"
+              />
+              <div className="flex items-center justify-between mt-3">
+                <span className="text-xs text-slate-400">
+                  {staffNotes.length}/{MAX_NOTES_LENGTH}
+                </span>
+                <button
+                  onClick={handleSaveNotes}
+                  disabled={isSavingNotes || !notesHaveChanged}
+                  className="px-4 py-1.5 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                >
+                  {isSavingNotes ? 'Saving...' : 'Save Notes'}
+                </button>
+              </div>
             </div>
           </div>
         </div>
 
         {/* Guest List */}
-        <div className="mt-4 md:mt-6 bg-white rounded-lg shadow">
-          <div className="px-4 md:px-6 py-3 md:py-4 border-b border-gray-200">
-            <div className="flex justify-between items-center gap-3">
+        <div className="mt-6 bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+          <div className="px-5 py-4 border-b border-slate-100">
+            <div className="flex justify-between items-center gap-4">
               <div className="flex items-center gap-3">
-                <h2 className="text-base md:text-lg font-semibold text-gray-900">Guests</h2>
-                <span className="inline-flex items-center px-2 md:px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 flex-shrink-0">
-                  {guests.length} {guests.length === 1 ? 'guest' : 'guests'}
+                <div className="p-2 bg-blue-50 text-blue-600 rounded-lg">
+                  <UsersIcon />
+                </div>
+                <h2 className="font-semibold text-slate-900">Guests</h2>
+                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-blue-100 text-blue-700">
+                  {guests.length}
                 </span>
               </div>
               <Link
                 href={`/dashboard/event/${eventId}/summary`}
-                className="inline-flex items-center px-3 py-1.5 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 text-sm font-medium"
+                className="inline-flex items-center gap-2 px-4 py-2 bg-slate-900 text-white rounded-lg text-sm font-medium hover:bg-slate-800 transition-colors"
               >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
                 Summary Report
               </Link>
             </div>
           </div>
 
           {guests.length === 0 ? (
-            <div className="p-4 md:p-6 text-center">
-              <p className="text-gray-500 text-sm md:text-base">No guests have joined yet.</p>
-              <p className="text-xs md:text-sm text-gray-400 mt-1">
-                Share the link above to invite guests.
+            <div className="px-5 py-12 text-center">
+              <div className="w-12 h-12 mx-auto mb-4 rounded-full bg-slate-100 flex items-center justify-center">
+                <UsersIcon />
+              </div>
+              <p className="text-slate-600 font-medium">No guests yet</p>
+              <p className="text-sm text-slate-400 mt-1">
+                Share the link above to invite guests
               </p>
             </div>
           ) : (
-            <ul className="divide-y divide-gray-200">
+            <ul className="divide-y divide-slate-100">
               {guests.map((guest, index) => (
-                <li key={guest.id} className="px-4 md:px-6 py-3 md:py-4 flex items-center gap-2 md:gap-3">
-                  <span className="text-xs md:text-sm text-gray-400 w-5 md:w-6 flex-shrink-0">{index + 1}.</span>
-                  <span className="text-sm md:text-base text-gray-900 truncate">{guest.name}</span>
+                <li key={guest.id} className="px-5 py-3 flex items-center gap-3 hover:bg-slate-50 transition-colors">
+                  <span className="w-6 h-6 flex items-center justify-center rounded-full bg-slate-100 text-xs font-medium text-slate-600">
+                    {index + 1}
+                  </span>
+                  <span className="text-sm text-slate-900 font-medium truncate">{guest.name}</span>
+                  {guest.dietary_notes && (
+                    <span className="ml-auto text-xs text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full truncate max-w-[150px]">
+                      {guest.dietary_notes}
+                    </span>
+                  )}
                 </li>
               ))}
             </ul>
           )}
 
-          <div className="px-4 md:px-6 py-3 md:py-4 border-t border-gray-200">
+          <div className="px-5 py-4 border-t border-slate-100 bg-slate-50">
             <Link
               href={`/event/${event.link_token}`}
-              className="inline-flex items-center text-sm md:text-base text-blue-600 hover:text-blue-800 font-medium"
+              className="inline-flex items-center gap-2 text-sm font-medium text-blue-600 hover:text-blue-800 transition-colors"
             >
-              View &amp; Edit Orders →
+              View & Edit Orders
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
+              </svg>
             </Link>
           </div>
         </div>
@@ -449,27 +570,32 @@ export default function EventManagementPage() {
 
       {/* Delete Confirmation Modal */}
       {showDeleteConfirm && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">Delete Event?</h3>
-            <p className="text-sm text-gray-600 mb-4">
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-xl shadow-2xl max-w-md w-full p-6 animate-in fade-in zoom-in duration-200">
+            <div className="w-12 h-12 mx-auto mb-4 rounded-full bg-red-100 flex items-center justify-center">
+              <svg className="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+              </svg>
+            </div>
+            <h3 className="text-lg font-semibold text-slate-900 text-center mb-2">Delete Event?</h3>
+            <p className="text-sm text-slate-600 text-center mb-2">
               This will permanently delete <strong>{event.event_name}</strong> and all {guests.length} guest{guests.length !== 1 ? 's' : ''}.
             </p>
-            <p className="text-sm text-red-600 mb-6">
+            <p className="text-sm text-red-600 text-center mb-6">
               This action cannot be undone.
             </p>
             <div className="flex gap-3">
               <button
                 onClick={() => setShowDeleteConfirm(false)}
                 disabled={isDeleting}
-                className="flex-1 px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50"
+                className="flex-1 px-4 py-2.5 border border-slate-200 rounded-lg text-sm font-medium text-slate-700 bg-white hover:bg-slate-50 disabled:opacity-50 transition-colors"
               >
                 Cancel
               </button>
               <button
                 onClick={handleDelete}
                 disabled={isDeleting}
-                className="flex-1 px-4 py-2 border border-transparent rounded-md text-sm font-medium text-white bg-red-600 hover:bg-red-700 disabled:opacity-50"
+                className="flex-1 px-4 py-2.5 border border-transparent rounded-lg text-sm font-medium text-white bg-red-600 hover:bg-red-700 disabled:opacity-50 transition-colors"
               >
                 {isDeleting ? 'Deleting...' : 'Delete Event'}
               </button>
