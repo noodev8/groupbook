@@ -47,6 +47,9 @@ const listGuestsRoute = require('./routes/guests/list');
 const addGuestRoute = require('./routes/guests/add');
 const editGuestRoute = require('./routes/guests/edit');
 const removeGuestRoute = require('./routes/guests/remove');
+const getBrandingRoute = require('./routes/branding/get');
+const updateBrandingRoute = require('./routes/branding/update');
+const updateProfileRoute = require('./routes/user/updateProfile');
 
 // =======================================================================
 // Route Registration
@@ -71,6 +74,13 @@ app.use('/api/guests', listGuestsRoute);
 app.use('/api/guests', addGuestRoute);
 app.use('/api/guests', editGuestRoute);
 app.use('/api/guests', removeGuestRoute);
+
+// Branding routes
+app.use('/api/branding', getBrandingRoute);
+app.use('/api/branding', updateBrandingRoute);
+
+// User routes
+app.use('/api/user', updateProfileRoute);
 
 // =======================================================================
 // Health Check Endpoint

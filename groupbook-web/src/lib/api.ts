@@ -44,6 +44,8 @@ export interface Event {
   party_lead_name: string | null;
   party_lead_email: string | null;
   party_lead_phone: string | null;
+  menu_link: string | null;
+  staff_notes: string | null;
   link_token: string;
   restaurant_name?: string;
   guest_count?: number;
@@ -181,6 +183,7 @@ export interface CreateEventParams {
   party_lead_name?: string;
   party_lead_email?: string;
   party_lead_phone?: string;
+  menu_link?: string;
 }
 
 /*
@@ -229,6 +232,8 @@ export interface UpdateEventParams {
   party_lead_name?: string | null;
   party_lead_email?: string | null;
   party_lead_phone?: string | null;
+  menu_link?: string | null;
+  staff_notes?: string | null;
 }
 
 /*
@@ -521,10 +526,11 @@ export interface PublicEvent {
  * Get Public Event - Get event details and guests by link_token
  * Auth is optional - if authenticated and owner, is_owner will be true
  * Used by guests to view event and attendee list
+ * Includes branding (logo_url, hero_image_url) from the restaurant owner
  */
-export async function getPublicEvent(linkToken: string): Promise<ApiResponse<{ event: PublicEvent; guests: Guest[]; is_owner: boolean }>> {
+export async function getPublicEvent(linkToken: string): Promise<ApiResponse<{ event: PublicEvent; guests: Guest[]; branding: Branding; is_owner: boolean }>> {
   try {
-    const response = await apiCall<{ event?: PublicEvent; guests?: Guest[]; is_owner?: boolean; message?: string }>(
+    const response = await apiCall<{ event?: PublicEvent; guests?: Guest[]; branding?: Branding; is_owner?: boolean; message?: string }>(
       `/api/events/public/${linkToken}`,
       {
         method: 'GET',
@@ -544,6 +550,7 @@ export async function getPublicEvent(linkToken: string): Promise<ApiResponse<{ e
       data: {
         event: response.event!,
         guests: response.guests || [],
+        branding: response.branding || { logo_url: null, hero_image_url: null, terms_link: null },
         is_owner: response.is_owner || false,
       },
     };
@@ -679,6 +686,137 @@ export async function removeGuest(
 
     return {
       success: true,
+    };
+  } catch (error) {
+    return {
+      success: false,
+      error: 'Network error - please check your connection',
+    };
+  }
+}
+
+// -----------------------------------------------------------------------
+// User Profile API Functions
+// -----------------------------------------------------------------------
+
+/*
+ * Update Profile - Update the authenticated user's profile settings
+ * Currently supports updating restaurant name
+ */
+export async function updateProfile(
+  restaurantName: string
+): Promise<ApiResponse<{ user: User }>> {
+  try {
+    const response = await apiCall<{ user?: User; message?: string }>(
+      '/api/user/updateProfile',
+      {
+        method: 'PUT',
+        body: JSON.stringify({ restaurant_name: restaurantName }),
+      }
+    );
+
+    if (response.return_code !== 'SUCCESS') {
+      return {
+        success: false,
+        error: response.message || 'Failed to update profile',
+        return_code: response.return_code,
+      };
+    }
+
+    return {
+      success: true,
+      data: {
+        user: response.user!,
+      },
+    };
+  } catch (error) {
+    return {
+      success: false,
+      error: 'Network error - please check your connection',
+    };
+  }
+}
+
+// -----------------------------------------------------------------------
+// Branding API Functions
+// -----------------------------------------------------------------------
+
+export interface Branding {
+  logo_url: string | null;
+  hero_image_url: string | null;
+  terms_link: string | null;
+}
+
+/*
+ * Get Branding - Get branding settings for the authenticated user
+ * Returns logo and hero image URLs on success
+ */
+export async function getBranding(): Promise<ApiResponse<{ branding: Branding }>> {
+  try {
+    const response = await apiCall<{ branding?: Branding; message?: string }>(
+      '/api/branding/get',
+      {
+        method: 'GET',
+      }
+    );
+
+    if (response.return_code !== 'SUCCESS') {
+      return {
+        success: false,
+        error: response.message || 'Failed to load branding',
+        return_code: response.return_code,
+      };
+    }
+
+    return {
+      success: true,
+      data: {
+        branding: response.branding!,
+      },
+    };
+  } catch (error) {
+    return {
+      success: false,
+      error: 'Network error - please check your connection',
+    };
+  }
+}
+
+/*
+ * Update Branding - Update branding settings for the authenticated user
+ * Pass null to clear a field, undefined to leave unchanged
+ */
+export async function updateBranding(
+  logoUrl?: string | null,
+  heroImageUrl?: string | null,
+  termsLink?: string | null
+): Promise<ApiResponse<{ branding: Branding }>> {
+  try {
+    const response = await apiCall<{ branding?: Branding; message?: string }>(
+      '/api/branding/update',
+      {
+        method: 'PUT',
+        body: JSON.stringify({
+          logo_url: logoUrl,
+          hero_image_url: heroImageUrl,
+          terms_link: termsLink,
+        }),
+      }
+    );
+
+    if (response.return_code !== 'SUCCESS') {
+      return {
+        success: false,
+        error: response.message || 'Failed to update branding',
+        return_code: response.return_code,
+      };
+    }
+
+    return {
+      success: true,
+      data: {
+        branding: response.branding!,
+      },
     };
   } catch (error) {
     return {

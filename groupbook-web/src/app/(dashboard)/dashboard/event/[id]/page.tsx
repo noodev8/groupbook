@@ -12,10 +12,12 @@ import { useEffect, useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/context/AuthContext';
-import { getEvent, listGuests, deleteEvent, toggleEventLock, sendEventInvite, Event, Guest } from '@/lib/api';
+import { getEvent, listGuests, deleteEvent, toggleEventLock, sendEventInvite, updateEvent, Event, Guest } from '@/lib/api';
+
+const MAX_NOTES_LENGTH = 500;
 
 export default function EventManagementPage() {
-  const { user, isLoading } = useAuth();
+  const { user, isLoading, logout } = useAuth();
   const router = useRouter();
   const params = useParams();
   const eventId = Number(params.id);
@@ -30,6 +32,9 @@ export default function EventManagementPage() {
   const [isTogglingLock, setIsTogglingLock] = useState(false);
   const [isSendingInvite, setIsSendingInvite] = useState(false);
   const [inviteSent, setInviteSent] = useState(false);
+  const [staffNotes, setStaffNotes] = useState('');
+  const [originalNotes, setOriginalNotes] = useState('');
+  const [isSavingNotes, setIsSavingNotes] = useState(false);
 
   // Redirect to login if not authenticated
   useEffect(() => {
@@ -47,11 +52,18 @@ export default function EventManagementPage() {
       // Fetch event details
       const eventResult = await getEvent(eventId);
       if (!eventResult.success) {
+        if (eventResult.return_code === 'UNAUTHORIZED') {
+          logout();
+          return;
+        }
         setError(eventResult.error || 'Failed to load event');
         setLoading(false);
         return;
       }
       setEvent(eventResult.data!.event);
+      const notes = eventResult.data!.event.staff_notes || '';
+      setStaffNotes(notes);
+      setOriginalNotes(notes);
 
       // Fetch guests
       const guestsResult = await listGuests(eventId);
@@ -65,7 +77,7 @@ export default function EventManagementPage() {
     if (user && eventId) {
       fetchEventData();
     }
-  }, [user, eventId]);
+  }, [user, eventId, logout]);
 
   // Format date for display
   const formatDateTime = (dateString: string) => {
@@ -153,6 +165,34 @@ export default function EventManagementPage() {
     }
     setIsSendingInvite(false);
   };
+
+  // Save notes to database
+  const handleSaveNotes = async () => {
+    if (!event) return;
+
+    setIsSavingNotes(true);
+    setError('');
+
+    const result = await updateEvent({
+      event_id: event.id,
+      event_name: event.event_name,
+      event_date_time: event.event_date_time,
+      cutoff_datetime: event.cutoff_datetime,
+      party_lead_name: event.party_lead_name,
+      party_lead_email: event.party_lead_email,
+      party_lead_phone: event.party_lead_phone,
+      staff_notes: staffNotes.trim() || null,
+    });
+
+    if (result.success) {
+      setOriginalNotes(staffNotes.trim());
+    } else {
+      setError(result.error || 'Failed to save notes');
+    }
+    setIsSavingNotes(false);
+  };
+
+  const notesHaveChanged = staffNotes.trim() !== originalNotes;
 
   // Show loading state while checking auth
   if (isLoading || loading) {
@@ -329,6 +369,33 @@ export default function EventManagementPage() {
                 </button>
               </div>
             )}
+          </div>
+
+          {/* Staff Notes Card */}
+          <div className="bg-white rounded-lg shadow p-4 md:p-6">
+            <h2 className="text-base md:text-lg font-semibold text-gray-900 mb-3 md:mb-4">Staff Notes</h2>
+            <p className="text-xs md:text-sm text-gray-500 mb-3">
+              Internal notes visible only to staff (e.g., VIP, deposit paid, allergies discussed).
+            </p>
+            <textarea
+              value={staffNotes}
+              onChange={(e) => setStaffNotes(e.target.value.slice(0, MAX_NOTES_LENGTH))}
+              placeholder="Add notes about this event..."
+              rows={3}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none"
+            />
+            <div className="flex items-center justify-between mt-2">
+              <span className="text-xs text-gray-400">
+                {staffNotes.length}/{MAX_NOTES_LENGTH}
+              </span>
+              <button
+                onClick={handleSaveNotes}
+                disabled={isSavingNotes || !notesHaveChanged}
+                className="px-4 py-1.5 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 text-sm disabled:opacity-50"
+              >
+                {isSavingNotes ? 'Saving...' : 'Save'}
+              </button>
+            </div>
           </div>
         </div>
 

@@ -13,7 +13,8 @@ Request Payload:
   "cutoff_datetime": "2025-01-14T12:00:00",   // string (ISO datetime), optional
   "party_lead_name": "Sarah Jones",           // string, optional
   "party_lead_email": "sarah@example.com",    // string, optional
-  "party_lead_phone": "07700 900123"          // string, optional
+  "party_lead_phone": "07700 900123",         // string, optional
+  "menu_link": "https://restaurant.com/menu"  // string (URL), optional
 }
 
 Success Response:
@@ -27,6 +28,7 @@ Success Response:
     "party_lead_name": "Sarah Jones",
     "party_lead_email": "sarah@example.com",
     "party_lead_phone": "07700 900123",
+    "menu_link": "https://restaurant.com/menu",
     "link_token": "a1b2c3d4e5f6...",
     "created_at": "2025-01-10T12:00:00.000Z"
   }
@@ -59,7 +61,8 @@ router.post('/create', verifyToken, async (req, res) => {
       cutoff_datetime,
       party_lead_name,
       party_lead_email,
-      party_lead_phone
+      party_lead_phone,
+      menu_link
     } = req.body;
     const userId = req.user.id;
 
@@ -136,10 +139,11 @@ router.post('/create', verifyToken, async (req, res) => {
         party_lead_name,
         party_lead_email,
         party_lead_phone,
+        menu_link,
         link_token
       )
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
-       RETURNING id, event_name, event_date_time, cutoff_datetime, party_lead_name, party_lead_email, party_lead_phone, link_token, created_at`,
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+       RETURNING id, event_name, event_date_time, cutoff_datetime, party_lead_name, party_lead_email, party_lead_phone, menu_link, link_token, created_at`,
       [
         userId,
         restaurantName,
@@ -149,6 +153,7 @@ router.post('/create', verifyToken, async (req, res) => {
         party_lead_name?.trim() || null,
         party_lead_email?.trim() || null,
         party_lead_phone?.trim() || null,
+        menu_link?.trim() || null,
         linkToken
       ]
     );
@@ -168,6 +173,7 @@ router.post('/create', verifyToken, async (req, res) => {
         party_lead_name: newEvent.party_lead_name,
         party_lead_email: newEvent.party_lead_email,
         party_lead_phone: newEvent.party_lead_phone,
+        menu_link: newEvent.menu_link,
         link_token: newEvent.link_token,
         created_at: newEvent.created_at,
       },

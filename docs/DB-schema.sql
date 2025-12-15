@@ -5,7 +5,7 @@
 -- Dumped from database version 16.11 (Ubuntu 16.11-0ubuntu0.24.04.1)
 -- Dumped by pg_dump version 17.4
 
--- Started on 2025-12-14 11:19:58
+-- Started on 2025-12-15 13:13:19
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
@@ -43,7 +43,10 @@ CREATE TABLE public.app_user (
     email character varying(255) NOT NULL,
     password_hash character varying(255) NOT NULL,
     restaurant_name character varying(255) NOT NULL,
-    created_at timestamp without time zone DEFAULT now() NOT NULL
+    created_at timestamp without time zone DEFAULT now() NOT NULL,
+    logo_url text,
+    hero_image_url text,
+    terms_link text
 );
 
 
@@ -274,7 +277,7 @@ ALTER DEFAULT PRIVILEGES FOR ROLE postgres IN SCHEMA public GRANT ALL ON SEQUENC
 ALTER DEFAULT PRIVILEGES FOR ROLE postgres IN SCHEMA public GRANT SELECT,INSERT,REFERENCES,DELETE,TRIGGER,TRUNCATE,UPDATE ON TABLES TO groupbook_user;
 
 
--- Completed on 2025-12-14 11:19:59
+-- Completed on 2025-12-15 13:13:25
 
 --
 -- PostgreSQL database dump complete

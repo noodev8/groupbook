@@ -110,6 +110,22 @@ export default function LoginPage() {
             </Link>
           </p>
         </form>
+
+        {/* Support Contact */}
+        <div className="mt-8 pt-6 border-t border-gray-200 text-center text-xs text-gray-500">
+          <p className="font-medium">Need help?</p>
+          <p className="mt-1">Noodev8 Ltd</p>
+          <p>
+            <a href="mailto:noodev8@gmail.com" className="text-blue-600 hover:text-blue-500">
+              noodev8@gmail.com
+            </a>
+            {' | '}
+            <a href="tel:07818443886" className="text-blue-600 hover:text-blue-500">
+              07818 443886
+            </a>
+          </p>
+          <p className="mt-1">3 Cumberland Place, Welshpool, SY21 7SB</p>
+        </div>
       </div>
     </div>
   );

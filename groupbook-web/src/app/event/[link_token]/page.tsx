@@ -4,16 +4,15 @@ import { useEffect, useState, useCallback } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
-import { getPublicEvent, addGuest, editGuest, removeGuest, PublicEvent, Guest } from '@/lib/api';
+import { getPublicEvent, addGuest, editGuest, removeGuest, PublicEvent, Guest, Branding } from '@/lib/api';
 
-// =============================================================================
-// DEMO BRANDING - Hardcoded for The Nags Head experiment
-// In production, this would come from the database based on restaurant settings
-// =============================================================================
-const DEMO_BRANDING = {
-  enabled: false, // Set to true to preview branding demo
-  logoUrl: '/demo-branding/Nagshead-logo.svg',
-  heroImageUrl: '/demo-branding/Homepagebanner2.jpg',
+// Cloudinary transformation URLs
+const getLogoUrl = (url: string) => {
+  return url.replace('/upload/', '/upload/w_400,h_150,c_fit/');
+};
+
+const getHeroUrl = (url: string) => {
+  return url.replace('/upload/', '/upload/w_1200,h_400,c_fill/');
 };
 
 export default function PublicEventPage() {
@@ -22,6 +21,7 @@ export default function PublicEventPage() {
 
   const [event, setEvent] = useState<PublicEvent | null>(null);
   const [guests, setGuests] = useState<Guest[]>([]);
+  const [branding, setBranding] = useState<Branding | null>(null);
   const [isOwner, setIsOwner] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -34,8 +34,8 @@ export default function PublicEventPage() {
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState('');
 
-  // Use branding for demo
-  const brand = DEMO_BRANDING;
+  // Check if branding is enabled (has logo or hero image)
+  const hasBranding = branding?.hero_image_url || branding?.logo_url;
 
   const fetchEvent = useCallback(async () => {
     setLoading(true);
@@ -46,6 +46,7 @@ export default function PublicEventPage() {
     if (result.success && result.data) {
       setEvent(result.data.event);
       setGuests(result.data.guests);
+      setBranding(result.data.branding);
       setIsOwner(result.data.is_owner);
     } else {
       setError(result.error || 'Event not found');
@@ -187,48 +188,80 @@ export default function PublicEventPage() {
   }
 
   // =============================================================================
-  // BRANDED VERSION - Simple: just logo + hero image, rest is original design
+  // BRANDED VERSION - Shows when restaurant has uploaded logo or hero image
   // =============================================================================
-  if (brand.enabled) {
+  if (hasBranding) {
     return (
       <div className="min-h-screen bg-gray-50">
-        {/* Hero Header with Background Image */}
+        {/* Header - with hero image or logo-only */}
         <header className="relative">
-          {/* Hero Image */}
-          <div className="relative h-40 md:h-52 lg:h-64 overflow-hidden">
-            <Image
-              src={brand.heroImageUrl}
-              alt={event.restaurant_name}
-              fill
-              className="object-cover"
-              priority
-            />
-            {/* Gradient Overlay */}
-            <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-black/50" />
-
-            {/* Back Button - for owners */}
-            {isOwner && (
-              <div className="absolute top-4 left-4 z-10">
-                <Link
-                  href={`/dashboard/event/${event.id}`}
-                  className="inline-flex items-center px-3 py-1.5 rounded-full text-sm font-medium bg-white/90 text-gray-700 hover:bg-white transition-colors shadow-sm"
-                >
-                  ← Back to Event
-                </Link>
-              </div>
-            )}
-
-            {/* Logo positioned on the image */}
-            <div className="absolute bottom-4 left-1/2 -translate-x-1/2">
+          {branding.hero_image_url ? (
+            /* Hero Image Header */
+            <div className="relative h-40 md:h-52 lg:h-64 overflow-hidden">
               <Image
-                src={brand.logoUrl}
+                src={getHeroUrl(branding.hero_image_url)}
                 alt={event.restaurant_name}
-                width={80}
-                height={80}
-                className="w-16 h-16 md:w-20 md:h-20 drop-shadow-lg"
+                fill
+                className="object-cover"
+                priority
+                unoptimized
               />
+              {/* Gradient Overlay */}
+              <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-black/50" />
+
+              {/* Back Button - for owners */}
+              {isOwner && (
+                <div className="absolute top-4 left-4 z-10">
+                  <Link
+                    href={`/dashboard/event/${event.id}`}
+                    className="inline-flex items-center px-3 py-1.5 rounded-full text-sm font-medium bg-white/90 text-gray-700 hover:bg-white transition-colors shadow-sm"
+                  >
+                    ← Back to Event
+                  </Link>
+                </div>
+              )}
+
+              {/* Logo positioned on the image (if uploaded) */}
+              {branding.logo_url && (
+                <div className="absolute bottom-4 left-1/2 -translate-x-1/2">
+                  <Image
+                    src={getLogoUrl(branding.logo_url)}
+                    alt={event.restaurant_name}
+                    width={120}
+                    height={60}
+                    className="max-h-16 md:max-h-20 w-auto drop-shadow-lg"
+                    unoptimized
+                  />
+                </div>
+              )}
             </div>
-          </div>
+          ) : (
+            /* Logo-only Header (no hero image) */
+            <div className="bg-white border-b border-gray-200">
+              <div className="px-4 py-4 md:py-6 max-w-lg md:max-w-2xl lg:max-w-4xl mx-auto">
+                {isOwner && (
+                  <div className="mb-3">
+                    <Link
+                      href={`/dashboard/event/${event.id}`}
+                      className="text-sm md:text-base text-blue-600 hover:text-blue-800"
+                    >
+                      ← Back to Event
+                    </Link>
+                  </div>
+                )}
+                <div className="flex justify-center">
+                  <Image
+                    src={getLogoUrl(branding.logo_url!)}
+                    alt={event.restaurant_name}
+                    width={200}
+                    height={80}
+                    className="max-h-16 md:max-h-20 w-auto"
+                    unoptimized
+                  />
+                </div>
+              </div>
+            </div>
+          )}
         </header>
 
         {/* Rest is original design */}
@@ -404,7 +437,22 @@ export default function PublicEventPage() {
           {/* Footer Note - only show for non-owners when closed */}
           {!isOwner && isClosedForGuests() && (
             <p className="text-center text-gray-500 text-xs md:text-sm px-4">
-              Editing is closed. Please contact the restaurant directly for changes.
+              Editing is closed. Please contact the restaurant or your booking lead for changes.
+            </p>
+          )}
+
+          {/* Terms Notice */}
+          {branding?.terms_link && (
+            <p className="text-center text-gray-500 text-xs md:text-sm px-4">
+              Please remove yourself if you can no longer attend. Remaining on the list at cutoff confirms your attendance and acceptance of our{' '}
+              <a
+                href={branding.terms_link}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-blue-600 hover:underline"
+              >
+                booking terms
+              </a>.
             </p>
           )}
         </main>
@@ -448,7 +496,7 @@ export default function PublicEventPage() {
               rel="noopener noreferrer"
               className="inline-block mt-3 md:mt-4 text-blue-600 text-sm md:text-base font-medium hover:underline"
             >
-              View Menu (PDF) →
+              View Menu →
             </a>
           )}
         </div>
@@ -608,7 +656,22 @@ export default function PublicEventPage() {
         {/* Footer Note - only show for non-owners when closed */}
         {!isOwner && isClosedForGuests() && (
           <p className="text-center text-gray-500 text-xs md:text-sm px-4">
-            Editing is closed. Please contact the restaurant directly for changes.
+            Editing is closed. Please contact the restaurant or your booking lead for changes.
+          </p>
+        )}
+
+        {/* Terms Notice */}
+        {branding?.terms_link && (
+          <p className="text-center text-gray-500 text-xs md:text-sm px-4">
+            Please remove yourself if you can no longer attend. Remaining on the list at cutoff confirms your attendance and acceptance of our{' '}
+            <a
+              href={branding.terms_link}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-blue-600 hover:underline"
+            >
+              booking terms
+            </a>.
           </p>
         )}
       </main>

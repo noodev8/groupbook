@@ -9,7 +9,7 @@ Purpose: Main page for restaurant staff after login.
 =======================================================================================================================================
 */
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/context/AuthContext';
@@ -30,14 +30,7 @@ export default function DashboardPage() {
     }
   }, [user, isLoading, router]);
 
-  // Fetch events when user is authenticated
-  useEffect(() => {
-    if (user) {
-      fetchEvents();
-    }
-  }, [user]);
-
-  const fetchEvents = async () => {
+  const fetchEvents = useCallback(async () => {
     setEventsLoading(true);
     setEventsError('');
 
@@ -46,11 +39,23 @@ export default function DashboardPage() {
     if (result.success && result.data) {
       setEvents(result.data.events);
     } else {
+      // If token is invalid/expired, logout and redirect to login
+      if (result.return_code === 'UNAUTHORIZED') {
+        logout();
+        return;
+      }
       setEventsError(result.error || 'Failed to load events');
     }
 
     setEventsLoading(false);
-  };
+  }, [logout]);
+
+  // Fetch events when user is authenticated
+  useEffect(() => {
+    if (user) {
+      fetchEvents();
+    }
+  }, [user, fetchEvents]);
 
   // Format date for display
   const formatDateTime = (dateString: string) => {
@@ -88,12 +93,20 @@ export default function DashboardPage() {
             <h1 className="text-lg sm:text-xl md:text-2xl font-bold text-gray-900 truncate">{user.restaurant_name}</h1>
             <p className="text-xs sm:text-sm text-gray-500 truncate">{user.email}</p>
           </div>
-          <button
-            onClick={logout}
-            className="text-xs sm:text-sm text-gray-600 hover:text-gray-900 flex-shrink-0"
-          >
-            Sign out
-          </button>
+          <div className="flex items-center gap-4">
+            <Link
+              href="/dashboard/settings"
+              className="text-xs sm:text-sm text-gray-600 hover:text-gray-900"
+            >
+              Settings
+            </Link>
+            <button
+              onClick={logout}
+              className="text-xs sm:text-sm text-gray-600 hover:text-gray-900"
+            >
+              Sign out
+            </button>
+          </div>
         </div>
       </header>
 
@@ -162,6 +175,20 @@ export default function DashboardPage() {
             </ul>
           </div>
         )}
+
+        {/* Support Footer */}
+        <div className="mt-12 pt-6 border-t border-gray-200 text-center text-xs text-gray-400">
+          <p>
+            Need help?{' '}
+            <a href="mailto:noodev8@gmail.com" className="text-blue-500 hover:text-blue-600">
+              noodev8@gmail.com
+            </a>
+            {' | '}
+            <a href="tel:07818443886" className="text-blue-500 hover:text-blue-600">
+              07818 443886
+            </a>
+          </p>
+        </div>
       </main>
     </div>
   );

@@ -15,7 +15,7 @@ import { useAuth } from '@/context/AuthContext';
 import { getEvent, updateEvent } from '@/lib/api';
 
 export default function EditEventPage() {
-  const { user, isLoading } = useAuth();
+  const { user, isLoading, logout } = useAuth();
   const router = useRouter();
   const params = useParams();
   const eventId = Number(params.id);
@@ -26,6 +26,7 @@ export default function EditEventPage() {
   const [partyLeadName, setPartyLeadName] = useState('');
   const [partyLeadEmail, setPartyLeadEmail] = useState('');
   const [partyLeadPhone, setPartyLeadPhone] = useState('');
+  const [menuLink, setMenuLink] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -54,7 +55,12 @@ export default function EditEventPage() {
         setPartyLeadName(event.party_lead_name || '');
         setPartyLeadEmail(event.party_lead_email || '');
         setPartyLeadPhone(event.party_lead_phone || '');
+        setMenuLink(event.menu_link || '');
       } else {
+        if (result.return_code === 'UNAUTHORIZED') {
+          logout();
+          return;
+        }
         setError(result.error || 'Failed to load event');
       }
 
@@ -64,7 +70,7 @@ export default function EditEventPage() {
     if (user && eventId) {
       fetchEvent();
     }
-  }, [user, eventId]);
+  }, [user, eventId, logout]);
 
   // Convert ISO datetime string to datetime-local input format (YYYY-MM-DDTHH:MM)
   const formatDateTimeForInput = (isoString: string): string => {
@@ -90,6 +96,7 @@ export default function EditEventPage() {
       party_lead_name: partyLeadName || null,
       party_lead_email: partyLeadEmail || null,
       party_lead_phone: partyLeadPhone || null,
+      menu_link: menuLink || null,
     });
 
     if (result.success) {
@@ -184,6 +191,24 @@ export default function EditEventPage() {
               />
               <p className="mt-1 text-xs text-gray-500">
                 After this time, guests won&apos;t be able to add themselves
+              </p>
+            </div>
+
+            {/* Menu Link (Optional) */}
+            <div>
+              <label htmlFor="menuLink" className="block text-xs md:text-sm font-medium text-gray-700">
+                Menu Link <span className="text-gray-400">(optional)</span>
+              </label>
+              <input
+                id="menuLink"
+                type="url"
+                value={menuLink}
+                onChange={(e) => setMenuLink(e.target.value)}
+                className="mt-1 block w-full px-3 py-2 md:py-2.5 border border-gray-300 rounded-md shadow-sm text-sm md:text-base focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                placeholder="https://yourrestaurant.com/menu"
+              />
+              <p className="mt-1 text-xs text-gray-500">
+                Guests will see this link when adding their food order
               </p>
             </div>
 

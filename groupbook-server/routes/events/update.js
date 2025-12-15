@@ -13,7 +13,9 @@ Request Payload:
   "cutoff_datetime": "2025-01-14T12:00:00",   // string (ISO datetime), optional (null to clear)
   "party_lead_name": "Sarah Jones",           // string, optional (null to clear)
   "party_lead_email": "sarah@example.com",    // string, optional (null to clear)
-  "party_lead_phone": "07700 900123"          // string, optional (null to clear)
+  "party_lead_phone": "07700 900123",         // string, optional (null to clear)
+  "menu_link": "https://restaurant.com/menu", // string (URL), optional (null to clear)
+  "staff_notes": "VIP customer"               // string, optional (null to clear)
 }
 
 Success Response:
@@ -27,6 +29,8 @@ Success Response:
     "party_lead_name": "Sarah Jones",
     "party_lead_email": "sarah@example.com",
     "party_lead_phone": "07700 900123",
+    "menu_link": "https://restaurant.com/menu",
+    "staff_notes": "VIP customer",
     "link_token": "a1b2c3d4e5f6...",
     "created_at": "2025-01-10T12:00:00.000Z"
   }
@@ -61,7 +65,9 @@ router.put('/update', verifyToken, async (req, res) => {
       cutoff_datetime,
       party_lead_name,
       party_lead_email,
-      party_lead_phone
+      party_lead_phone,
+      menu_link,
+      staff_notes
     } = req.body;
     const userId = req.user.id;
 
@@ -133,9 +139,11 @@ router.put('/update', verifyToken, async (req, res) => {
         cutoff_datetime = $3,
         party_lead_name = $4,
         party_lead_email = $5,
-        party_lead_phone = $6
-      WHERE id = $7
-      RETURNING id, event_name, event_date_time, cutoff_datetime, party_lead_name, party_lead_email, party_lead_phone, link_token, restaurant_name, created_at`,
+        party_lead_phone = $6,
+        menu_link = $7,
+        staff_notes = $8
+      WHERE id = $9
+      RETURNING id, event_name, event_date_time, cutoff_datetime, party_lead_name, party_lead_email, party_lead_phone, menu_link, staff_notes, link_token, restaurant_name, created_at`,
       [
         event_name.trim(),
         eventDateTime,
@@ -143,6 +151,8 @@ router.put('/update', verifyToken, async (req, res) => {
         party_lead_name?.trim() || null,
         party_lead_email?.trim() || null,
         party_lead_phone?.trim() || null,
+        menu_link?.trim() || null,
+        staff_notes?.trim() || null,
         event_id
       ]
     );
@@ -162,6 +172,8 @@ router.put('/update', verifyToken, async (req, res) => {
         party_lead_name: updatedEvent.party_lead_name,
         party_lead_email: updatedEvent.party_lead_email,
         party_lead_phone: updatedEvent.party_lead_phone,
+        menu_link: updatedEvent.menu_link,
+        staff_notes: updatedEvent.staff_notes,
         link_token: updatedEvent.link_token,
         restaurant_name: updatedEvent.restaurant_name,
         created_at: updatedEvent.created_at,

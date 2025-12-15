@@ -19,8 +19,11 @@ Success Response:
     "party_lead_name": "Sarah Jones",
     "party_lead_email": "sarah@example.com",
     "party_lead_phone": "07700 900123",
+    "menu_link": "https://restaurant.com/menu",
     "link_token": "a1b2c3d4e5f6...",
     "restaurant_name": "The Good Fork",
+    "is_locked": false,
+    "staff_notes": "VIP customer - comp dessert",
     "created_at": "2025-01-10T12:00:00.000Z"
   }
 }
@@ -53,8 +56,8 @@ router.get('/get/:id', verifyToken, async (req, res) => {
     // ---------------------------------------------------------------
     const eventResult = await query(
       `SELECT id, app_user_id, event_name, event_date_time, cutoff_datetime,
-              party_lead_name, party_lead_email, party_lead_phone,
-              link_token, restaurant_name, is_locked, created_at
+              party_lead_name, party_lead_email, party_lead_phone, menu_link,
+              link_token, restaurant_name, is_locked, staff_notes, created_at
        FROM event
        WHERE id = $1`,
       [eventId]
@@ -93,9 +96,11 @@ router.get('/get/:id', verifyToken, async (req, res) => {
         party_lead_name: event.party_lead_name,
         party_lead_email: event.party_lead_email,
         party_lead_phone: event.party_lead_phone,
+        menu_link: event.menu_link,
         link_token: event.link_token,
         restaurant_name: event.restaurant_name,
         is_locked: event.is_locked,
+        staff_notes: event.staff_notes,
         created_at: event.created_at,
       },
     });
