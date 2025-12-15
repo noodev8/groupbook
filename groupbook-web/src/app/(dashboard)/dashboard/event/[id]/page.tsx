@@ -403,10 +403,18 @@ export default function EventManagementPage() {
         <div className="mt-4 md:mt-6 bg-white rounded-lg shadow">
           <div className="px-4 md:px-6 py-3 md:py-4 border-b border-gray-200">
             <div className="flex justify-between items-center gap-3">
-              <h2 className="text-base md:text-lg font-semibold text-gray-900">Guests</h2>
-              <span className="inline-flex items-center px-2 md:px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 flex-shrink-0">
-                {guests.length} {guests.length === 1 ? 'guest' : 'guests'}
-              </span>
+              <div className="flex items-center gap-3">
+                <h2 className="text-base md:text-lg font-semibold text-gray-900">Guests</h2>
+                <span className="inline-flex items-center px-2 md:px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 flex-shrink-0">
+                  {guests.length} {guests.length === 1 ? 'guest' : 'guests'}
+                </span>
+              </div>
+              <Link
+                href={`/dashboard/event/${eventId}/summary`}
+                className="inline-flex items-center px-3 py-1.5 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 text-sm font-medium"
+              >
+                Summary Report
+              </Link>
             </div>
           </div>
 
