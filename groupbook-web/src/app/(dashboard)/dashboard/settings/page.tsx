@@ -292,8 +292,14 @@ export default function SettingsPage() {
   // Show loading state
   if (isLoading || loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
-        <p className="text-gray-500 text-sm md:text-base">Loading...</p>
+      <div className="min-h-screen flex items-center justify-center bg-slate-50 px-4">
+        <div className="flex items-center gap-3 text-slate-500">
+          <svg className="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
+            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+          </svg>
+          <span>Loading...</span>
+        </div>
       </div>
     );
   }
@@ -304,49 +310,56 @@ export default function SettingsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header className="bg-white shadow">
-        <div className="max-w-7xl mx-auto px-4 py-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-slate-50">
+      {/* Header with gradient accent */}
+      <header className="bg-white border-b-2 border-transparent" style={{ borderImage: 'linear-gradient(to right, #8b5cf6, #d946ef) 1' }}>
+        <div className="max-w-3xl mx-auto px-4 py-4 sm:px-6 lg:px-8">
           <div className="flex items-center gap-4">
-            <Link href="/dashboard" className="text-sm md:text-base text-blue-600 hover:text-blue-800">
-              &larr; Back
+            <Link href="/dashboard" className="inline-flex items-center gap-2 text-sm text-slate-600 hover:text-violet-600 transition-colors">
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+              </svg>
+              Back
             </Link>
-            <h1 className="text-lg sm:text-xl md:text-2xl font-bold text-gray-900">Settings</h1>
+            <h1 className="text-xl sm:text-2xl font-bold text-slate-900">Settings</h1>
           </div>
         </div>
       </header>
 
       {/* Main Content */}
-      <main className="max-w-3xl mx-auto px-4 py-6 md:py-8 sm:px-6 lg:px-8">
+      <main className="max-w-3xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
         {/* Error/Success Messages */}
         {error && (
-          <div className="mb-4 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded text-sm">
+          <div className="mb-6 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl text-sm">
             {error}
           </div>
         )}
         {success && (
-          <div className="mb-4 bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded text-sm">
+          <div className="mb-6 bg-gradient-to-r from-violet-600 to-fuchsia-600 text-white px-4 py-3 rounded-xl text-sm shadow-lg shadow-violet-500/25">
             {success}
           </div>
         )}
 
         {/* Restaurant Name Section */}
-        <div className="bg-white rounded-lg shadow p-4 md:p-6 mb-6">
-          <h2 className="text-base md:text-lg font-semibold text-gray-900 mb-4">Restaurant Name</h2>
+        <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-5 md:p-6 mb-6">
+          <h2 className="text-lg font-semibold text-slate-900 mb-4">Restaurant Name</h2>
           <div className="flex flex-col sm:flex-row gap-3">
             <input
               type="text"
               value={restaurantName}
               onChange={(e) => setRestaurantName(e.target.value)}
               placeholder="Your restaurant name"
-              className="flex-1 px-3 py-2 border border-gray-300 rounded-md text-sm md:text-base focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              className="flex-1 px-4 py-3 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent transition-shadow"
               disabled={savingName}
             />
             <button
               onClick={handleSaveRestaurantName}
               disabled={savingName || restaurantName === user?.restaurant_name}
-              className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 text-sm font-medium disabled:opacity-50 flex-shrink-0"
+              className={`px-5 py-3 rounded-xl text-sm font-semibold transition-all flex-shrink-0 ${
+                restaurantName !== user?.restaurant_name && !savingName
+                  ? 'bg-gradient-to-r from-violet-500 to-fuchsia-500 text-white hover:opacity-90 shadow-lg shadow-violet-500/25'
+                  : 'bg-slate-100 text-slate-400 cursor-not-allowed'
+              }`}
             >
               {savingName ? 'Saving...' : 'Save'}
             </button>
@@ -354,29 +367,29 @@ export default function SettingsPage() {
         </div>
 
         {/* Subscription Section */}
-        <div className="bg-white rounded-lg shadow p-4 md:p-6 mb-6">
-          <h2 className="text-base md:text-lg font-semibold text-gray-900 mb-4">Subscription</h2>
+        <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-5 md:p-6 mb-6">
+          <h2 className="text-lg font-semibold text-slate-900 mb-4">Subscription</h2>
 
           {billing && (
             <div>
               {/* Free user */}
               {billing.status === 'free' && (
                 <div>
-                  <p className="text-sm text-gray-600 mb-4">
-                    Current plan: <span className="font-medium text-gray-900">Free</span> (1 event)
+                  <p className="text-sm text-slate-600 mb-4">
+                    Current plan: <span className="font-semibold text-slate-900">Free</span> (1 event)
                   </p>
                   <div className="flex flex-col sm:flex-row gap-3">
                     <button
                       onClick={() => handleUpgrade('monthly')}
                       disabled={billingLoading}
-                      className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50"
+                      className="px-5 py-3 border border-slate-200 rounded-xl text-sm font-medium text-slate-700 bg-white hover:bg-slate-50 hover:border-violet-200 disabled:opacity-50 transition-all"
                     >
                       Upgrade - £35/month
                     </button>
                     <button
                       onClick={() => handleUpgrade('annual')}
                       disabled={billingLoading}
-                      className="px-4 py-2 border border-transparent rounded-md text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50"
+                      className="px-5 py-3 bg-gradient-to-r from-violet-500 to-fuchsia-500 text-white rounded-xl text-sm font-semibold hover:opacity-90 disabled:opacity-50 transition-all shadow-lg shadow-violet-500/25"
                     >
                       Upgrade - £299/year (Save 29%)
                     </button>
@@ -387,13 +400,13 @@ export default function SettingsPage() {
               {/* Active subscriber */}
               {(billing.status === 'active' || billing.status === 'cancelled') && (
                 <div>
-                  <p className="text-sm text-gray-600 mb-1">
-                    Current plan: <span className="font-medium text-gray-900">
+                  <p className="text-sm text-slate-600 mb-1">
+                    Current plan: <span className="font-semibold text-slate-900">
                       Pro ({billing.plan === 'monthly' ? 'Monthly' : 'Annual'})
                     </span>
                   </p>
                   {billing.current_period_end && (
-                    <p className="text-sm text-gray-500 mb-4">
+                    <p className="text-sm text-slate-500 mb-4">
                       {billing.status === 'cancelled' ? 'Access until' : 'Renews'}: {formatDate(billing.current_period_end)}
                     </p>
                   )}
@@ -405,7 +418,7 @@ export default function SettingsPage() {
                   <button
                     onClick={handleManageBilling}
                     disabled={billingLoading}
-                    className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50"
+                    className="px-5 py-3 border border-slate-200 rounded-xl text-sm font-medium text-slate-700 bg-white hover:bg-slate-50 hover:border-violet-200 disabled:opacity-50 transition-all"
                   >
                     {billingLoading ? 'Opening...' : 'Manage Billing'}
                   </button>
@@ -421,7 +434,7 @@ export default function SettingsPage() {
                   <button
                     onClick={handleManageBilling}
                     disabled={billingLoading}
-                    className="px-4 py-2 border border-transparent rounded-md text-sm font-medium text-white bg-red-600 hover:bg-red-700 disabled:opacity-50"
+                    className="px-5 py-3 bg-red-600 text-white rounded-xl text-sm font-semibold hover:bg-red-700 disabled:opacity-50 transition-colors"
                   >
                     {billingLoading ? 'Opening...' : 'Update Payment Method'}
                   </button>
@@ -432,21 +445,21 @@ export default function SettingsPage() {
         </div>
 
         {/* Branding Section Header */}
-        <h2 className="text-base md:text-lg font-semibold text-gray-900 mb-2">Branding</h2>
-        <p className="text-sm text-gray-600 mb-4">
+        <h2 className="text-lg font-semibold text-slate-900 mb-2">Branding</h2>
+        <p className="text-sm text-slate-500 mb-4">
           Customize how your guest booking pages look. Upload your logo and a header image.
         </p>
 
         {/* Logo Section */}
-        <div className="bg-white rounded-lg shadow p-4 md:p-6 mb-6">
-          <h2 className="text-base md:text-lg font-semibold text-gray-900 mb-2">Logo</h2>
-          <p className="text-xs md:text-sm text-gray-500 mb-4">
+        <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-5 md:p-6 mb-6">
+          <h2 className="text-lg font-semibold text-slate-900 mb-2">Logo</h2>
+          <p className="text-xs text-slate-500 mb-4">
             Recommended: PNG with transparent background. Will be resized to fit within 400x150 pixels.
           </p>
 
           {branding?.logo_url ? (
             <div className="space-y-4">
-              <div className="border border-gray-200 rounded-lg p-4 bg-gray-50">
+              <div className="border border-slate-200 rounded-xl p-4 bg-slate-50">
                 <Image
                   src={getLogoUrl(branding.logo_url)}
                   alt="Logo preview"
@@ -456,17 +469,17 @@ export default function SettingsPage() {
                   unoptimized
                 />
               </div>
-              <div className="flex gap-2">
+              <div className="flex gap-3">
                 <button
                   onClick={() => logoInputRef.current?.click()}
                   disabled={uploadingLogo}
-                  className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50"
+                  className="px-4 py-2.5 text-sm font-medium text-slate-700 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 hover:border-violet-200 disabled:opacity-50 transition-all"
                 >
                   {uploadingLogo ? 'Uploading...' : 'Replace'}
                 </button>
                 <button
                   onClick={handleRemoveLogo}
-                  className="px-4 py-2 text-sm font-medium text-red-600 bg-white border border-red-300 rounded-md hover:bg-red-50"
+                  className="px-4 py-2.5 text-sm font-medium text-red-600 bg-white border border-red-200 rounded-xl hover:bg-red-50 transition-colors"
                 >
                   Remove
                 </button>
@@ -476,9 +489,9 @@ export default function SettingsPage() {
             <button
               onClick={() => logoInputRef.current?.click()}
               disabled={uploadingLogo}
-              className="w-full py-8 border-2 border-dashed border-gray-300 rounded-lg hover:border-blue-400 hover:bg-blue-50 transition-colors disabled:opacity-50"
+              className="w-full py-8 border-2 border-dashed border-slate-300 rounded-xl hover:border-violet-400 hover:bg-violet-50 transition-colors disabled:opacity-50"
             >
-              <span className="text-sm text-gray-600">
+              <span className="text-sm text-slate-600">
                 {uploadingLogo ? 'Uploading...' : 'Click to upload logo'}
               </span>
             </button>
@@ -494,15 +507,15 @@ export default function SettingsPage() {
         </div>
 
         {/* Hero Image Section */}
-        <div className="bg-white rounded-lg shadow p-4 md:p-6 mb-6">
-          <h2 className="text-base md:text-lg font-semibold text-gray-900 mb-2">Header Image</h2>
-          <p className="text-xs md:text-sm text-gray-500 mb-4">
+        <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-5 md:p-6 mb-6">
+          <h2 className="text-lg font-semibold text-slate-900 mb-2">Header Image</h2>
+          <p className="text-xs text-slate-500 mb-4">
             A wide banner image for the top of your guest pages. Will be cropped to 1200x400 pixels (3:1 ratio).
           </p>
 
           {branding?.hero_image_url ? (
             <div className="space-y-4">
-              <div className="border border-gray-200 rounded-lg overflow-hidden">
+              <div className="border border-slate-200 rounded-xl overflow-hidden">
                 <Image
                   src={getHeroUrl(branding.hero_image_url)}
                   alt="Hero image preview"
@@ -512,17 +525,17 @@ export default function SettingsPage() {
                   unoptimized
                 />
               </div>
-              <div className="flex gap-2">
+              <div className="flex gap-3">
                 <button
                   onClick={() => heroInputRef.current?.click()}
                   disabled={uploadingHero}
-                  className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50"
+                  className="px-4 py-2.5 text-sm font-medium text-slate-700 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 hover:border-violet-200 disabled:opacity-50 transition-all"
                 >
                   {uploadingHero ? 'Uploading...' : 'Replace'}
                 </button>
                 <button
                   onClick={handleRemoveHero}
-                  className="px-4 py-2 text-sm font-medium text-red-600 bg-white border border-red-300 rounded-md hover:bg-red-50"
+                  className="px-4 py-2.5 text-sm font-medium text-red-600 bg-white border border-red-200 rounded-xl hover:bg-red-50 transition-colors"
                 >
                   Remove
                 </button>
@@ -532,9 +545,9 @@ export default function SettingsPage() {
             <button
               onClick={() => heroInputRef.current?.click()}
               disabled={uploadingHero}
-              className="w-full py-12 border-2 border-dashed border-gray-300 rounded-lg hover:border-blue-400 hover:bg-blue-50 transition-colors disabled:opacity-50"
+              className="w-full py-12 border-2 border-dashed border-slate-300 rounded-xl hover:border-violet-400 hover:bg-violet-50 transition-colors disabled:opacity-50"
             >
-              <span className="text-sm text-gray-600">
+              <span className="text-sm text-slate-600">
                 {uploadingHero ? 'Uploading...' : 'Click to upload header image'}
               </span>
             </button>
@@ -550,9 +563,9 @@ export default function SettingsPage() {
         </div>
 
         {/* Booking Terms Section */}
-        <div className="bg-white rounded-lg shadow p-4 md:p-6 mb-6">
-          <h2 className="text-base md:text-lg font-semibold text-gray-900 mb-2">Booking Terms</h2>
-          <p className="text-xs md:text-sm text-gray-500 mb-4">
+        <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-5 md:p-6 mb-6">
+          <h2 className="text-lg font-semibold text-slate-900 mb-2">Booking Terms</h2>
+          <p className="text-xs text-slate-500 mb-4">
             Link to your booking terms and conditions. Guests will see a notice at the bottom of the booking page.
           </p>
           <div className="flex flex-col sm:flex-row gap-3">
@@ -561,13 +574,17 @@ export default function SettingsPage() {
               value={termsLink}
               onChange={(e) => setTermsLink(e.target.value)}
               placeholder="https://yourrestaurant.com/terms"
-              className="flex-1 px-3 py-2 border border-gray-300 rounded-md text-sm md:text-base focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              className="flex-1 px-4 py-3 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent transition-shadow"
               disabled={savingTerms}
             />
             <button
               onClick={handleSaveTermsLink}
               disabled={savingTerms || termsLink === (branding?.terms_link || '')}
-              className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 text-sm font-medium disabled:opacity-50 flex-shrink-0"
+              className={`px-5 py-3 rounded-xl text-sm font-semibold transition-all flex-shrink-0 ${
+                termsLink !== (branding?.terms_link || '') && !savingTerms
+                  ? 'bg-gradient-to-r from-violet-500 to-fuchsia-500 text-white hover:opacity-90 shadow-lg shadow-violet-500/25'
+                  : 'bg-slate-100 text-slate-400 cursor-not-allowed'
+              }`}
             >
               {savingTerms ? 'Saving...' : 'Save'}
             </button>

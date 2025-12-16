@@ -17,7 +17,7 @@ import { listEvents, Event } from '@/lib/api';
 
 // Icons
 const CalendarIcon = () => (
-  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
   </svg>
 );
@@ -25,6 +25,12 @@ const CalendarIcon = () => (
 const PlusIcon = () => (
   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+  </svg>
+);
+
+const UsersIcon = () => (
+  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
   </svg>
 );
 
@@ -125,11 +131,11 @@ function DashboardContent() {
 
   return (
     <div className="min-h-screen bg-slate-50">
-      {/* Header */}
-      <header className="bg-white border-b border-slate-200">
+      {/* Header with gradient accent */}
+      <header className="bg-white border-b-2 border-transparent" style={{ borderImage: 'linear-gradient(to right, #8b5cf6, #d946ef) 1' }}>
         <div className="max-w-6xl mx-auto px-4 py-4 sm:px-6 lg:px-8 flex justify-between items-center gap-4">
           <Link href="/" className="flex items-center gap-3 min-w-0 flex-1 hover:opacity-90 transition-opacity">
-            <div className="w-10 h-10 bg-gradient-to-br from-violet-500 to-fuchsia-500 rounded-xl flex items-center justify-center shadow-sm flex-shrink-0">
+            <div className="w-10 h-10 bg-gradient-to-br from-violet-500 to-fuchsia-500 rounded-xl flex items-center justify-center shadow-lg shadow-violet-500/25 flex-shrink-0">
               <span className="text-white font-bold">K</span>
             </div>
             <div className="min-w-0">
@@ -140,13 +146,13 @@ function DashboardContent() {
           <div className="flex items-center gap-4">
             <Link
               href="/dashboard/settings"
-              className="text-sm text-slate-600 hover:text-slate-900 transition-colors"
+              className="text-sm text-slate-600 hover:text-violet-600 transition-colors"
             >
               Settings
             </Link>
             <button
               onClick={logout}
-              className="text-sm text-slate-600 hover:text-slate-900 transition-colors"
+              className="text-sm text-slate-600 hover:text-violet-600 transition-colors"
             >
               Sign out
             </button>
@@ -155,12 +161,12 @@ function DashboardContent() {
       </header>
 
       {/* Main Content */}
-      <main className="max-w-6xl mx-auto px-4 py-6 sm:px-6 lg:px-8">
+      <main className="max-w-6xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
         {/* Success Message */}
         {successMessage && (
-          <div className="mb-6 bg-slate-900 text-white px-4 py-3 rounded-lg text-sm flex justify-between items-center">
+          <div className="mb-6 bg-gradient-to-r from-violet-600 to-fuchsia-600 text-white px-4 py-3 rounded-xl text-sm flex justify-between items-center shadow-lg shadow-violet-500/25">
             <span>{successMessage}</span>
-            <button onClick={() => setSuccessMessage('')} className="text-slate-400 hover:text-white transition-colors">
+            <button onClick={() => setSuccessMessage('')} className="text-white/70 hover:text-white transition-colors">
               <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                 <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
               </svg>
@@ -169,11 +175,14 @@ function DashboardContent() {
         )}
 
         {/* Actions */}
-        <div className="mb-6 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
-          <h2 className="text-lg font-semibold text-slate-900">Your Events</h2>
+        <div className="mb-8 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
+          <div>
+            <h2 className="text-2xl font-bold text-slate-900">Your Events</h2>
+            <p className="text-sm text-slate-500 mt-1">Manage your group bookings</p>
+          </div>
           <Link
             href="/dashboard/create"
-            className="inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-gradient-to-r from-violet-500 to-fuchsia-500 text-white rounded-xl text-sm font-semibold hover:opacity-90 transition-all shadow-lg shadow-violet-500/25"
+            className="inline-flex items-center justify-center gap-2 px-5 py-3 bg-gradient-to-r from-violet-500 to-fuchsia-500 text-white rounded-xl text-sm font-semibold hover:opacity-90 transition-all shadow-lg shadow-violet-500/25"
           >
             <PlusIcon />
             Create New Event
@@ -182,14 +191,14 @@ function DashboardContent() {
 
         {/* Error Message */}
         {eventsError && (
-          <div className="mb-6 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
+          <div className="mb-6 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl text-sm">
             {eventsError}
           </div>
         )}
 
         {/* Loading State */}
         {eventsLoading && (
-          <div className="bg-white rounded-lg shadow-sm p-12 text-center">
+          <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-12 text-center">
             <div className="flex items-center justify-center gap-3 text-slate-500">
               <svg className="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
                 <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
@@ -202,49 +211,59 @@ function DashboardContent() {
 
         {/* Empty State */}
         {!eventsLoading && events.length === 0 && (
-          <div className="bg-white rounded-lg shadow-sm p-12 text-center">
-            <div className="w-12 h-12 mx-auto mb-4 rounded-full bg-slate-100 flex items-center justify-center text-slate-400">
+          <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-12 text-center">
+            <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-violet-100 to-fuchsia-100 flex items-center justify-center text-violet-500">
               <CalendarIcon />
             </div>
-            <p className="text-slate-600 font-medium">No events yet</p>
-            <p className="text-sm text-slate-400 mt-1">
+            <p className="text-slate-900 font-semibold text-lg">No events yet</p>
+            <p className="text-sm text-slate-500 mt-1 mb-6">
               Create your first group booking to get started
             </p>
+            <Link
+              href="/dashboard/create"
+              className="inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-gradient-to-r from-violet-500 to-fuchsia-500 text-white rounded-xl text-sm font-semibold hover:opacity-90 transition-all shadow-lg shadow-violet-500/25"
+            >
+              <PlusIcon />
+              Create Your First Event
+            </Link>
           </div>
         )}
 
         {/* Events List */}
         {!eventsLoading && events.length > 0 && (
-          <div className="bg-white rounded-lg shadow-sm overflow-hidden">
-            <ul className="divide-y divide-slate-100">
-              {events.map((event) => (
-                <li key={event.id}>
-                  <Link
-                    href={`/dashboard/event/${event.id}`}
-                    className="block p-4 sm:p-5 hover:bg-slate-50 transition-colors"
-                  >
-                    <div className="flex justify-between items-center gap-4">
-                      <div className="min-w-0 flex-1">
-                        <h3 className="text-base font-medium text-slate-900 truncate">
-                          {event.event_name}
-                        </h3>
-                        <p className="text-sm text-slate-500 mt-0.5">
-                          {formatDateTime(event.event_date_time)}
-                        </p>
-                      </div>
-                      <div className="flex items-center gap-3 flex-shrink-0">
-                        <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-slate-100 text-slate-600">
-                          {event.guest_count || 0} guests
-                        </span>
-                        <svg className="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                        </svg>
-                      </div>
+          <div className="space-y-4">
+            {events.map((event) => (
+              <Link
+                key={event.id}
+                href={`/dashboard/event/${event.id}`}
+                className="block bg-white rounded-2xl shadow-sm border border-slate-200 p-5 sm:p-6 hover:shadow-md hover:shadow-violet-500/5 hover:border-violet-200 transition-all group"
+              >
+                <div className="flex justify-between items-center gap-4">
+                  <div className="flex items-center gap-4 min-w-0 flex-1">
+                    <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-violet-100 to-fuchsia-100 flex items-center justify-center text-violet-600 flex-shrink-0">
+                      <CalendarIcon />
                     </div>
-                  </Link>
-                </li>
-              ))}
-            </ul>
+                    <div className="min-w-0">
+                      <h3 className="text-lg font-semibold text-slate-900 truncate group-hover:text-violet-600 transition-colors">
+                        {event.event_name}
+                      </h3>
+                      <p className="text-sm text-slate-500 mt-0.5">
+                        {formatDateTime(event.event_date_time)}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-4 flex-shrink-0">
+                    <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium bg-gradient-to-r from-violet-100 to-fuchsia-100 text-violet-700">
+                      <UsersIcon />
+                      {event.guest_count || 0} guests
+                    </span>
+                    <svg className="w-5 h-5 text-slate-300 group-hover:text-violet-500 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                    </svg>
+                  </div>
+                </div>
+              </Link>
+            ))}
           </div>
         )}
 
@@ -252,11 +271,11 @@ function DashboardContent() {
         <div className="mt-12 pt-6 border-t border-slate-200 text-center text-xs text-slate-400">
           <p>
             Need help?{' '}
-            <a href="mailto:noodev8@gmail.com" className="text-slate-500 hover:text-slate-700 transition-colors">
+            <a href="mailto:noodev8@gmail.com" className="text-violet-500 hover:text-violet-700 transition-colors">
               noodev8@gmail.com
             </a>
             {' | '}
-            <a href="tel:07818443886" className="text-slate-500 hover:text-slate-700 transition-colors">
+            <a href="tel:07818443886" className="text-violet-500 hover:text-violet-700 transition-colors">
               07818 443886
             </a>
           </p>

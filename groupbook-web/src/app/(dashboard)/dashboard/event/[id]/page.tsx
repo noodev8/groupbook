@@ -251,9 +251,9 @@ export default function EventManagementPage() {
   if (error && !event) {
     return (
       <div className="min-h-screen bg-slate-50">
-        <header className="bg-white border-b border-slate-200">
+        <header className="bg-white border-b-2 border-transparent" style={{ borderImage: 'linear-gradient(to right, #8b5cf6, #d946ef) 1' }}>
           <div className="max-w-6xl mx-auto px-4 py-4 sm:px-6 lg:px-8">
-            <Link href="/dashboard" className="inline-flex items-center gap-2 text-sm text-slate-600 hover:text-slate-900 transition-colors">
+            <Link href="/dashboard" className="inline-flex items-center gap-2 text-sm text-slate-600 hover:text-violet-600 transition-colors">
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
               </svg>
@@ -262,7 +262,7 @@ export default function EventManagementPage() {
           </div>
         </header>
         <main className="max-w-6xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
-          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
+          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl text-sm">
             {error}
           </div>
         </main>
@@ -276,12 +276,12 @@ export default function EventManagementPage() {
 
   return (
     <div className="min-h-screen bg-slate-50">
-      {/* Header */}
-      <header className="bg-white border-b border-slate-200">
+      {/* Header with gradient accent */}
+      <header className="bg-white border-b-2 border-transparent" style={{ borderImage: 'linear-gradient(to right, #8b5cf6, #d946ef) 1' }}>
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
           {/* Top bar with back link */}
-          <div className="py-3 border-b border-slate-100">
-            <Link href="/dashboard" className="inline-flex items-center gap-2 text-sm text-slate-600 hover:text-slate-900 transition-colors">
+          <div className="py-3">
+            <Link href="/dashboard" className="inline-flex items-center gap-2 text-sm text-slate-600 hover:text-violet-600 transition-colors">
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
               </svg>
@@ -290,11 +290,11 @@ export default function EventManagementPage() {
           </div>
 
           {/* Event title and actions */}
-          <div className="py-4 flex items-center justify-between gap-4">
+          <div className="py-4 flex items-center justify-between gap-4 border-t border-slate-100">
             <div className="flex items-center gap-3 min-w-0">
-              <h1 className="text-xl sm:text-2xl font-semibold text-slate-900 truncate">{event.event_name}</h1>
+              <h1 className="text-xl sm:text-2xl font-bold text-slate-900 truncate">{event.event_name}</h1>
               {event.is_locked && (
-                <span className="inline-flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-medium bg-amber-100 text-amber-700 flex-shrink-0">
+                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-medium bg-amber-100 text-amber-700 flex-shrink-0">
                   <LockIcon />
                   Locked
                 </span>
@@ -306,13 +306,13 @@ export default function EventManagementPage() {
               <button
                 onClick={handleToggleLock}
                 disabled={isTogglingLock}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-colors disabled:opacity-50"
+                className="inline-flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-slate-600 hover:text-violet-600 hover:bg-violet-50 rounded-xl transition-colors disabled:opacity-50"
               >
                 {isTogglingLock ? '...' : event.is_locked ? <><UnlockIcon /> Unlock</> : <><LockIcon /> Lock</>}
               </button>
               <Link
                 href={`/dashboard/event/${eventId}/edit`}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-colors"
+                className="inline-flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-slate-600 hover:text-violet-600 hover:bg-violet-50 rounded-xl transition-colors"
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
@@ -321,7 +321,7 @@ export default function EventManagementPage() {
               </Link>
               <button
                 onClick={() => setShowDeleteConfirm(true)}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors"
+                className="inline-flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-red-600 hover:text-red-700 hover:bg-red-50 rounded-xl transition-colors"
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
@@ -336,19 +336,19 @@ export default function EventManagementPage() {
       {/* Error banner */}
       {error && (
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-6">
-          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
+          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl text-sm">
             {error}
           </div>
         </div>
       )}
 
       {/* Main Content */}
-      <main className="max-w-6xl mx-auto px-4 py-6 sm:px-6 lg:px-8">
-        <div className="grid gap-5 md:grid-cols-2">
+      <main className="max-w-6xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
+        <div className="grid gap-6 md:grid-cols-2">
           {/* Event Details Card */}
-          <div className="bg-white rounded-lg shadow-sm overflow-hidden">
+          <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden hover:shadow-md hover:shadow-violet-500/5 hover:border-violet-200 transition-all">
             <div className="px-5 py-4 flex items-center gap-3">
-              <div className="p-2 bg-blue-50 text-blue-600 rounded-lg">
+              <div className="p-2.5 bg-gradient-to-br from-violet-100 to-fuchsia-100 text-violet-600 rounded-xl">
                 <CalendarIcon />
               </div>
               <h2 className="font-semibold text-slate-900">Event Details</h2>
@@ -371,9 +371,9 @@ export default function EventManagementPage() {
 
           {/* Party Lead Card */}
           {(event.party_lead_name || event.party_lead_email || event.party_lead_phone) && (
-            <div className="bg-white rounded-lg shadow-sm overflow-hidden">
+            <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden hover:shadow-md hover:shadow-violet-500/5 hover:border-violet-200 transition-all">
               <div className="px-5 py-4 flex items-center gap-3">
-                <div className="p-2 bg-blue-50 text-blue-600 rounded-lg">
+                <div className="p-2.5 bg-gradient-to-br from-fuchsia-100 to-pink-100 text-fuchsia-600 rounded-xl">
                   <UserIcon />
                 </div>
                 <h2 className="font-semibold text-slate-900">Party Lead</h2>
@@ -390,7 +390,7 @@ export default function EventManagementPage() {
                     <div>
                       <dt className="text-xs font-medium text-slate-500 uppercase tracking-wide">Email</dt>
                       <dd className="mt-1 text-sm">
-                        <a href={`mailto:${event.party_lead_email}`} className="text-blue-600 hover:text-blue-800 hover:underline break-all transition-colors">
+                        <a href={`mailto:${event.party_lead_email}`} className="text-violet-600 hover:text-violet-800 hover:underline break-all transition-colors">
                           {event.party_lead_email}
                         </a>
                       </dd>
@@ -400,7 +400,7 @@ export default function EventManagementPage() {
                     <div>
                       <dt className="text-xs font-medium text-slate-500 uppercase tracking-wide">Phone</dt>
                       <dd className="mt-1 text-sm">
-                        <a href={`tel:${event.party_lead_phone}`} className="text-blue-600 hover:text-blue-800 hover:underline transition-colors">
+                        <a href={`tel:${event.party_lead_phone}`} className="text-violet-600 hover:text-violet-800 hover:underline transition-colors">
                           {event.party_lead_phone}
                         </a>
                       </dd>
@@ -412,9 +412,9 @@ export default function EventManagementPage() {
           )}
 
           {/* Shareable Link Card */}
-          <div className="bg-white rounded-lg shadow-sm overflow-hidden">
+          <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden hover:shadow-md hover:shadow-violet-500/5 hover:border-violet-200 transition-all">
             <div className="px-5 py-4 flex items-center gap-3">
-              <div className="p-2 bg-blue-50 text-blue-600 rounded-lg">
+              <div className="p-2.5 bg-gradient-to-br from-violet-100 to-fuchsia-100 text-violet-600 rounded-xl">
                 <LinkIcon />
               </div>
               <h2 className="font-semibold text-slate-900">Shareable Link</h2>
@@ -428,13 +428,13 @@ export default function EventManagementPage() {
                   type="text"
                   readOnly
                   value={getShareableLink()}
-                  className="flex-1 px-3 py-2 border border-slate-200 rounded-lg bg-slate-50 text-sm text-slate-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="flex-1 px-3 py-2.5 border border-slate-200 rounded-xl bg-slate-50 text-sm text-slate-600 focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent"
                 />
                 <button
                   onClick={copyLink}
-                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-all flex-shrink-0 ${
+                  className={`px-4 py-2.5 rounded-xl text-sm font-medium transition-all flex-shrink-0 ${
                     linkCopied
-                      ? 'bg-gradient-to-r from-violet-500 to-fuchsia-500 text-white'
+                      ? 'bg-gradient-to-r from-violet-500 to-fuchsia-500 text-white shadow-lg shadow-violet-500/25'
                       : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
                   }`}
                 >
@@ -446,7 +446,7 @@ export default function EventManagementPage() {
                   <button
                     onClick={handleSendInvite}
                     disabled={isSendingInvite}
-                    className="text-sm text-slate-600 hover:text-slate-900 transition-colors disabled:opacity-50 inline-flex items-center gap-1.5"
+                    className="text-sm text-violet-600 hover:text-violet-800 transition-colors disabled:opacity-50 inline-flex items-center gap-1.5"
                   >
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
@@ -459,9 +459,9 @@ export default function EventManagementPage() {
           </div>
 
           {/* Staff Notes Card */}
-          <div className="bg-white rounded-lg shadow-sm overflow-hidden">
+          <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden hover:shadow-md hover:shadow-violet-500/5 hover:border-violet-200 transition-all">
             <div className="px-5 py-4 flex items-center gap-3">
-              <div className="p-2 bg-amber-50 text-amber-600 rounded-lg">
+              <div className="p-2.5 bg-gradient-to-br from-amber-100 to-orange-100 text-amber-600 rounded-xl">
                 <NotesIcon />
               </div>
               <h2 className="font-semibold text-slate-900">Staff Notes</h2>
@@ -475,7 +475,7 @@ export default function EventManagementPage() {
                 onChange={(e) => setStaffNotes(e.target.value.slice(0, MAX_NOTES_LENGTH))}
                 placeholder="Add notes about this event..."
                 rows={3}
-                className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none transition-shadow"
+                className="w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent resize-none transition-shadow"
               />
               <div className="flex items-center justify-between mt-3">
                 <span className="text-xs text-slate-400">
@@ -484,7 +484,7 @@ export default function EventManagementPage() {
                 <button
                   onClick={handleSaveNotes}
                   disabled={isSavingNotes || !notesHaveChanged}
-                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                  className={`px-4 py-2 rounded-xl text-sm font-medium transition-all ${
                     notesHaveChanged
                       ? 'bg-gradient-to-r from-violet-500 to-fuchsia-500 text-white hover:opacity-90 shadow-lg shadow-violet-500/25'
                       : 'bg-slate-100 text-slate-400 cursor-not-allowed'
@@ -498,15 +498,15 @@ export default function EventManagementPage() {
         </div>
 
         {/* Guest List */}
-        <div className="mt-6 bg-white rounded-lg shadow-sm overflow-hidden">
-          <div className="px-5 py-4">
+        <div className="mt-8 bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+          <div className="px-5 py-5">
             <div className="flex justify-between items-center gap-4">
               <div className="flex items-center gap-3">
-                <div className="p-2 bg-blue-50 text-blue-600 rounded-lg">
+                <div className="p-2.5 bg-gradient-to-br from-violet-100 to-fuchsia-100 text-violet-600 rounded-xl">
                   <UsersIcon />
                 </div>
                 <h2 className="font-semibold text-slate-900">Guests</h2>
-                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-blue-100 text-blue-700">
+                <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-gradient-to-r from-violet-100 to-fuchsia-100 text-violet-700">
                   {guests.length}
                 </span>
               </div>
@@ -524,19 +524,19 @@ export default function EventManagementPage() {
 
           {guests.length === 0 ? (
             <div className="px-5 py-12 text-center">
-              <div className="w-12 h-12 mx-auto mb-4 rounded-full bg-slate-100 flex items-center justify-center">
+              <div className="w-14 h-14 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-violet-100 to-fuchsia-100 flex items-center justify-center text-violet-500">
                 <UsersIcon />
               </div>
-              <p className="text-slate-600 font-medium">No guests yet</p>
-              <p className="text-sm text-slate-400 mt-1">
+              <p className="text-slate-900 font-semibold">No guests yet</p>
+              <p className="text-sm text-slate-500 mt-1">
                 Share the link above to invite guests
               </p>
             </div>
           ) : (
             <ul className="divide-y divide-slate-100">
               {guests.map((guest, index) => (
-                <li key={guest.id} className="px-5 py-3 flex items-center gap-3 hover:bg-slate-50 transition-colors">
-                  <span className="w-6 h-6 flex items-center justify-center rounded-full bg-slate-100 text-xs font-medium text-slate-600 flex-shrink-0">
+                <li key={guest.id} className="px-5 py-4 flex items-center gap-4 hover:bg-slate-50 transition-colors">
+                  <span className="w-7 h-7 flex items-center justify-center rounded-full bg-gradient-to-br from-violet-100 to-fuchsia-100 text-xs font-semibold text-violet-700 flex-shrink-0">
                     {index + 1}
                   </span>
                   <span className="text-sm text-slate-900 font-medium">{guest.name}</span>
@@ -553,7 +553,7 @@ export default function EventManagementPage() {
           <div className="px-5 py-4 border-t border-slate-100 bg-slate-50">
             <Link
               href={`/event/${event.link_token}`}
-              className="inline-flex items-center gap-2 text-sm font-medium text-slate-600 hover:text-slate-900 transition-colors"
+              className="inline-flex items-center gap-2 text-sm font-medium text-violet-600 hover:text-violet-800 transition-colors"
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
@@ -570,13 +570,13 @@ export default function EventManagementPage() {
       {/* Delete Confirmation Modal */}
       {showDeleteConfirm && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-lg shadow-2xl max-w-md w-full p-6 animate-in fade-in zoom-in duration-200">
-            <div className="w-12 h-12 mx-auto mb-4 rounded-full bg-red-100 flex items-center justify-center">
-              <svg className="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 animate-in fade-in zoom-in duration-200">
+            <div className="w-14 h-14 mx-auto mb-4 rounded-2xl bg-red-100 flex items-center justify-center">
+              <svg className="w-7 h-7 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
               </svg>
             </div>
-            <h3 className="text-lg font-semibold text-slate-900 text-center mb-2">Delete Event?</h3>
+            <h3 className="text-lg font-bold text-slate-900 text-center mb-2">Delete Event?</h3>
             <p className="text-sm text-slate-600 text-center mb-2">
               This will permanently delete <strong>{event.event_name}</strong> and all {guests.length} guest{guests.length !== 1 ? 's' : ''}.
             </p>
@@ -587,14 +587,14 @@ export default function EventManagementPage() {
               <button
                 onClick={() => setShowDeleteConfirm(false)}
                 disabled={isDeleting}
-                className="flex-1 px-4 py-2.5 border border-slate-200 rounded-lg text-sm font-medium text-slate-700 bg-white hover:bg-slate-50 disabled:opacity-50 transition-colors"
+                className="flex-1 px-4 py-2.5 border border-slate-200 rounded-xl text-sm font-medium text-slate-700 bg-white hover:bg-slate-50 disabled:opacity-50 transition-colors"
               >
                 Cancel
               </button>
               <button
                 onClick={handleDelete}
                 disabled={isDeleting}
-                className="flex-1 px-4 py-2.5 border border-transparent rounded-lg text-sm font-medium text-white bg-red-600 hover:bg-red-700 disabled:opacity-50 transition-colors"
+                className="flex-1 px-4 py-2.5 border border-transparent rounded-xl text-sm font-medium text-white bg-red-600 hover:bg-red-700 disabled:opacity-50 transition-colors"
               >
                 {isDeleting ? 'Deleting...' : 'Delete Event'}
               </button>
