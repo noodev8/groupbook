@@ -6,6 +6,7 @@ Dashboard Page
 =======================================================================================================================================
 Purpose: Main page for restaurant staff after login.
          Shows list of events and allows creating new ones.
+         Features premium dark gradient header with light content area.
 =======================================================================================================================================
 */
 
@@ -23,7 +24,7 @@ const CalendarIcon = () => (
 );
 
 const PlusIcon = () => (
-  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
   </svg>
 );
@@ -31,6 +32,13 @@ const PlusIcon = () => (
 const UsersIcon = () => (
   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
+  </svg>
+);
+
+const SettingsIcon = () => (
+  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
   </svg>
 );
 
@@ -112,8 +120,8 @@ function DashboardContent() {
   // Show loading state while checking auth
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-50 px-4">
-        <div className="flex items-center gap-3 text-slate-500">
+      <div className="min-h-screen flex items-center justify-center bg-slate-900 px-4">
+        <div className="flex items-center gap-3 text-slate-400">
           <svg className="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
             <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
             <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
@@ -130,151 +138,194 @@ function DashboardContent() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50">
-      {/* Header with gradient accent */}
-      <header className="bg-white border-b-2 border-transparent" style={{ borderImage: 'linear-gradient(to right, #8b5cf6, #d946ef) 1' }}>
-        <div className="max-w-6xl mx-auto px-4 py-4 sm:px-6 lg:px-8 flex justify-between items-center gap-4">
-          <Link href="/" className="flex items-center gap-3 min-w-0 flex-1 hover:opacity-90 transition-opacity">
-            <div className="w-10 h-10 bg-gradient-to-br from-violet-500 to-fuchsia-500 rounded-xl flex items-center justify-center shadow-lg shadow-violet-500/25 flex-shrink-0">
-              <span className="text-white font-bold">K</span>
+    <div className="min-h-screen bg-slate-100">
+      {/* Premium Gradient Header */}
+      <header className="relative overflow-hidden bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
+        {/* Background decorations */}
+        <div className="absolute inset-0 overflow-hidden">
+          <div className="absolute -top-1/2 -right-1/4 w-96 h-96 bg-violet-500/20 rounded-full blur-3xl" />
+          <div className="absolute -bottom-1/2 -left-1/4 w-96 h-96 bg-fuchsia-500/20 rounded-full blur-3xl" />
+        </div>
+
+        {/* Header Content */}
+        <div className="relative z-10">
+          {/* Top Bar */}
+          <div className="max-w-6xl mx-auto px-4 py-4 sm:px-6 lg:px-8">
+            <div className="flex justify-between items-center">
+              <Link href="/" className="flex items-center gap-3 hover:opacity-90 transition-opacity">
+                <div className="w-10 h-10 bg-gradient-to-br from-violet-500 to-fuchsia-500 rounded-xl flex items-center justify-center shadow-lg shadow-violet-500/25">
+                  <span className="text-white font-bold text-lg">K</span>
+                </div>
+                <span className="text-white font-semibold text-lg hidden sm:block">Kitchen Ready</span>
+              </Link>
+              <div className="flex items-center gap-2">
+                <Link
+                  href="/dashboard/settings"
+                  className="p-2.5 text-white/70 hover:text-white hover:bg-white/10 rounded-xl transition-colors"
+                  title="Settings"
+                >
+                  <SettingsIcon />
+                </Link>
+                <button
+                  onClick={logout}
+                  className="px-4 py-2 text-sm text-white/70 hover:text-white hover:bg-white/10 rounded-xl transition-colors"
+                >
+                  Sign out
+                </button>
+              </div>
             </div>
-            <div className="min-w-0">
-              <h1 className="text-xl sm:text-2xl font-semibold text-slate-900">Kitchen Ready</h1>
-              <p className="text-sm text-slate-500 truncate">{user.restaurant_name}</p>
-            </div>
-          </Link>
-          <div className="flex items-center gap-4">
-            <Link
-              href="/dashboard/settings"
-              className="text-sm text-slate-600 hover:text-violet-600 transition-colors"
-            >
-              Settings
-            </Link>
-            <button
-              onClick={logout}
-              className="text-sm text-slate-600 hover:text-violet-600 transition-colors"
-            >
-              Sign out
-            </button>
           </div>
+
+          {/* Hero Section */}
+          <div className="max-w-6xl mx-auto px-4 pt-8 pb-24 sm:px-6 lg:px-8">
+            <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-6">
+              <div>
+                <p className="text-violet-300 text-sm font-medium mb-2">Welcome back</p>
+                <h1 className="text-3xl sm:text-4xl font-bold text-white mb-2">
+                  {user.restaurant_name}
+                </h1>
+                <p className="text-slate-400">
+                  {events.length === 0
+                    ? 'Get started by creating your first event'
+                    : `You have ${events.length} event${events.length === 1 ? '' : 's'}`
+                  }
+                </p>
+              </div>
+              <Link
+                href="/dashboard/create"
+                className="inline-flex items-center justify-center gap-2 px-6 py-3.5 bg-gradient-to-r from-violet-500 to-fuchsia-500 text-white rounded-xl text-base font-semibold hover:opacity-90 transition-all shadow-lg shadow-violet-500/25 flex-shrink-0"
+              >
+                <PlusIcon />
+                Create Event
+              </Link>
+            </div>
+          </div>
+        </div>
+
+        {/* Curved bottom edge */}
+        <div className="absolute bottom-0 left-0 right-0">
+          <svg viewBox="0 0 1440 60" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-auto" preserveAspectRatio="none">
+            <path d="M0 60V0C240 40 480 60 720 60C960 60 1200 40 1440 0V60H0Z" fill="#f1f5f9" />
+          </svg>
         </div>
       </header>
 
       {/* Main Content */}
-      <main className="max-w-6xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
+      <main className="relative z-10 max-w-6xl mx-auto px-4 pb-12 sm:px-6 lg:px-8 -mt-14">
         {/* Success Message */}
         {successMessage && (
-          <div className="mb-6 bg-gradient-to-r from-violet-600 to-fuchsia-600 text-white px-4 py-3 rounded-xl text-sm flex justify-between items-center shadow-lg shadow-violet-500/25">
-            <span>{successMessage}</span>
-            <button onClick={() => setSuccessMessage('')} className="text-white/70 hover:text-white transition-colors">
-              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+          <div className="mb-6 bg-gradient-to-r from-violet-600 to-fuchsia-600 text-white px-5 py-4 rounded-2xl text-sm flex justify-between items-center shadow-lg shadow-violet-500/25">
+            <span className="font-medium">{successMessage}</span>
+            <button onClick={() => setSuccessMessage('')} className="text-white/70 hover:text-white transition-colors p-1">
+              <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
                 <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
               </svg>
             </button>
           </div>
         )}
 
-        {/* Actions */}
-        <div className="mb-8 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
-          <div>
-            <h2 className="text-2xl font-bold text-slate-900">Your Events</h2>
-            <p className="text-sm text-slate-500 mt-1">Manage your group bookings</p>
-          </div>
-          <Link
-            href="/dashboard/create"
-            className="inline-flex items-center justify-center gap-2 px-5 py-3 bg-gradient-to-r from-violet-500 to-fuchsia-500 text-white rounded-xl text-sm font-semibold hover:opacity-90 transition-all shadow-lg shadow-violet-500/25"
-          >
-            <PlusIcon />
-            Create New Event
-          </Link>
-        </div>
-
         {/* Error Message */}
         {eventsError && (
-          <div className="mb-6 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl text-sm">
+          <div className="mb-6 bg-red-50 border border-red-200 text-red-700 px-5 py-4 rounded-2xl text-sm">
             {eventsError}
           </div>
         )}
 
-        {/* Loading State */}
-        {eventsLoading && (
-          <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-12 text-center">
-            <div className="flex items-center justify-center gap-3 text-slate-500">
-              <svg className="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
-                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-              </svg>
-              <span>Loading events...</span>
+        {/* Events Section */}
+        <div className="bg-white rounded-2xl shadow-xl shadow-slate-200/50 border border-slate-200 overflow-hidden">
+          {/* Section Header */}
+          <div className="px-6 py-5 border-b border-slate-100 flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <div className="p-3 bg-gradient-to-br from-violet-100 to-fuchsia-100 text-violet-600 rounded-xl">
+                <CalendarIcon />
+              </div>
+              <div>
+                <h2 className="text-lg font-semibold text-slate-900">Your Events</h2>
+                <p className="text-sm text-slate-500">Manage your group bookings</p>
+              </div>
             </div>
           </div>
-        )}
 
-        {/* Empty State */}
-        {!eventsLoading && events.length === 0 && (
-          <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-12 text-center">
-            <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-violet-100 to-fuchsia-100 flex items-center justify-center text-violet-500">
-              <CalendarIcon />
+          {/* Loading State */}
+          {eventsLoading && (
+            <div className="p-12 text-center">
+              <div className="flex items-center justify-center gap-3 text-slate-500">
+                <svg className="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                </svg>
+                <span>Loading events...</span>
+              </div>
             </div>
-            <p className="text-slate-900 font-semibold text-lg">No events yet</p>
-            <p className="text-sm text-slate-500 mt-1 mb-6">
-              Create your first group booking to get started
-            </p>
-            <Link
-              href="/dashboard/create"
-              className="inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-gradient-to-r from-violet-500 to-fuchsia-500 text-white rounded-xl text-sm font-semibold hover:opacity-90 transition-all shadow-lg shadow-violet-500/25"
-            >
-              <PlusIcon />
-              Create Your First Event
-            </Link>
-          </div>
-        )}
+          )}
 
-        {/* Events List */}
-        {!eventsLoading && events.length > 0 && (
-          <div className="space-y-4">
-            {events.map((event) => (
+          {/* Empty State */}
+          {!eventsLoading && events.length === 0 && (
+            <div className="p-12 text-center">
+              <div className="w-20 h-20 mx-auto mb-5 rounded-2xl bg-gradient-to-br from-violet-100 to-fuchsia-100 flex items-center justify-center text-violet-500">
+                <CalendarIcon />
+              </div>
+              <p className="text-slate-900 font-semibold text-xl mb-2">No events yet</p>
+              <p className="text-slate-500 mb-6 max-w-sm mx-auto">
+                Create your first group booking to start managing guest lists
+              </p>
               <Link
-                key={event.id}
-                href={`/dashboard/event/${event.id}`}
-                className="block bg-white rounded-2xl shadow-sm border border-slate-200 p-5 sm:p-6 hover:shadow-md hover:shadow-violet-500/5 hover:border-violet-200 transition-all group"
+                href="/dashboard/create"
+                className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-violet-500 to-fuchsia-500 text-white rounded-xl text-sm font-semibold hover:opacity-90 transition-all shadow-lg shadow-violet-500/25"
               >
-                <div className="flex justify-between items-center gap-4">
-                  <div className="flex items-center gap-4 min-w-0 flex-1">
-                    <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-violet-100 to-fuchsia-100 flex items-center justify-center text-violet-600 flex-shrink-0">
-                      <CalendarIcon />
-                    </div>
-                    <div className="min-w-0">
-                      <h3 className="text-lg font-semibold text-slate-900 truncate group-hover:text-violet-600 transition-colors">
-                        {event.event_name}
-                      </h3>
-                      <p className="text-sm text-slate-500 mt-0.5">
-                        {formatDateTime(event.event_date_time)}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-4 flex-shrink-0">
-                    <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium bg-gradient-to-r from-violet-100 to-fuchsia-100 text-violet-700">
-                      <UsersIcon />
-                      {event.guest_count || 0} guests
-                    </span>
-                    <svg className="w-5 h-5 text-slate-300 group-hover:text-violet-500 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                    </svg>
-                  </div>
-                </div>
+                <PlusIcon />
+                Create Your First Event
               </Link>
-            ))}
-          </div>
-        )}
+            </div>
+          )}
+
+          {/* Events List */}
+          {!eventsLoading && events.length > 0 && (
+            <div className="divide-y divide-slate-100">
+              {events.map((event) => (
+                <Link
+                  key={event.id}
+                  href={`/dashboard/event/${event.id}`}
+                  className="block p-5 sm:p-6 hover:bg-slate-50 transition-colors group"
+                >
+                  <div className="flex justify-between items-center gap-4">
+                    <div className="flex items-center gap-4 min-w-0 flex-1">
+                      <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-violet-500 to-fuchsia-500 flex items-center justify-center text-white flex-shrink-0 shadow-lg shadow-violet-500/20">
+                        <CalendarIcon />
+                      </div>
+                      <div className="min-w-0">
+                        <h3 className="text-lg font-semibold text-slate-900 truncate group-hover:text-violet-600 transition-colors">
+                          {event.event_name}
+                        </h3>
+                        <p className="text-sm text-slate-500 mt-0.5">
+                          {formatDateTime(event.event_date_time)}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-4 flex-shrink-0">
+                      <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-slate-100 text-slate-700">
+                        <UsersIcon />
+                        {event.guest_count || 0}
+                      </span>
+                      <svg className="w-5 h-5 text-slate-300 group-hover:text-violet-500 group-hover:translate-x-1 transition-all" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                      </svg>
+                    </div>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          )}
+        </div>
 
         {/* Support Footer */}
-        <div className="mt-12 pt-6 border-t border-slate-200 text-center text-xs text-slate-400">
+        <div className="mt-8 text-center text-sm text-slate-400">
           <p>
             Need help?{' '}
             <a href="mailto:noodev8@gmail.com" className="text-violet-500 hover:text-violet-700 transition-colors">
               noodev8@gmail.com
             </a>
-            {' | '}
+            {' · '}
             <a href="tel:07818443886" className="text-violet-500 hover:text-violet-700 transition-colors">
               07818 443886
             </a>
@@ -288,8 +339,8 @@ function DashboardContent() {
 export default function DashboardPage() {
   return (
     <Suspense fallback={
-      <div className="min-h-screen flex items-center justify-center bg-slate-50 px-4">
-        <div className="flex items-center gap-3 text-slate-500">
+      <div className="min-h-screen flex items-center justify-center bg-slate-900 px-4">
+        <div className="flex items-center gap-3 text-slate-400">
           <svg className="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
             <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
             <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />

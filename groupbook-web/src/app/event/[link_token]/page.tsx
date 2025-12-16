@@ -1,5 +1,14 @@
 'use client';
 
+/*
+=======================================================================================================================================
+Public Event Page (Guest View)
+=======================================================================================================================================
+Purpose: Public page where guests can view event details, see the guest list, and add themselves.
+         Uses modal for add/edit form. Premium styling matching dashboard.
+=======================================================================================================================================
+*/
+
 import { useEffect, useState, useCallback } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
@@ -15,6 +24,43 @@ const getHeroUrl = (url: string) => {
   return url.replace('/upload/', '/upload/w_1200,h_400,c_fill/');
 };
 
+// Icons
+const CalendarIcon = () => (
+  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+  </svg>
+);
+
+const UsersIcon = () => (
+  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
+  </svg>
+);
+
+const PlusIcon = () => (
+  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+  </svg>
+);
+
+const MenuIcon = () => (
+  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+  </svg>
+);
+
+const CloseIcon = () => (
+  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+  </svg>
+);
+
+const MoreIcon = () => (
+  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
+  </svg>
+);
+
 export default function PublicEventPage() {
   const params = useParams();
   const linkToken = params.link_token as string;
@@ -25,6 +71,12 @@ export default function PublicEventPage() {
   const [isOwner, setIsOwner] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+
+  // Modal state
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  // Dropdown menu state
+  const [openMenuId, setOpenMenuId] = useState<number | null>(null);
 
   // Form state
   const [name, setName] = useState('');
@@ -61,12 +113,38 @@ export default function PublicEventPage() {
     }
   }, [linkToken, fetchEvent]);
 
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = () => setOpenMenuId(null);
+    if (openMenuId !== null) {
+      document.addEventListener('click', handleClickOutside);
+      return () => document.removeEventListener('click', handleClickOutside);
+    }
+  }, [openMenuId]);
+
   const resetForm = () => {
     setName('');
     setFoodOrder('');
     setDietaryNotes('');
     setEditingGuestId(null);
     setSubmitError('');
+  };
+
+  const openModal = (guest?: Guest) => {
+    if (guest) {
+      setName(guest.name);
+      setFoodOrder(guest.food_order || '');
+      setDietaryNotes(guest.dietary_notes || '');
+      setEditingGuestId(guest.id);
+    } else {
+      resetForm();
+    }
+    setIsModalOpen(true);
+  };
+
+  const closeModal = () => {
+    setIsModalOpen(false);
+    resetForm();
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -84,7 +162,7 @@ export default function PublicEventPage() {
       // Update existing guest
       const result = await editGuest(linkToken, editingGuestId, name.trim(), foodOrder.trim(), dietaryNotes.trim());
       if (result.success) {
-        resetForm();
+        closeModal();
         fetchEvent();
       } else {
         setSubmitError(result.error || 'Failed to update');
@@ -93,7 +171,7 @@ export default function PublicEventPage() {
       // Add new guest
       const result = await addGuest(linkToken, name.trim(), foodOrder.trim(), dietaryNotes.trim());
       if (result.success) {
-        resetForm();
+        closeModal();
         fetchEvent();
       } else {
         setSubmitError(result.error || 'Failed to add');
@@ -103,32 +181,15 @@ export default function PublicEventPage() {
     setSubmitting(false);
   };
 
-  const handleEdit = (guest: Guest) => {
-    setName(guest.name);
-    setFoodOrder(guest.food_order || '');
-    setDietaryNotes(guest.dietary_notes || '');
-    setEditingGuestId(guest.id);
-    setSubmitError('');
-    // Scroll to form
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
-
   const handleRemove = async (guestId: number) => {
     if (!confirm('Remove this guest from the list?')) return;
 
     const result = await removeGuest(linkToken, guestId);
     if (result.success) {
       fetchEvent();
-      if (editingGuestId === guestId) {
-        resetForm();
-      }
     } else {
       alert(result.error || 'Failed to remove guest');
     }
-  };
-
-  const handleCancelEdit = () => {
-    resetForm();
   };
 
   const formatDateTime = (dateString: string) => {
@@ -183,14 +244,14 @@ export default function PublicEventPage() {
   if (error || !event) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-slate-50 px-4">
-        <div className="bg-white rounded-lg shadow-sm p-8 text-center max-w-md w-full">
-          <div className="w-12 h-12 mx-auto mb-4 rounded-full bg-slate-100 flex items-center justify-center text-slate-400">
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-8 text-center max-w-md w-full">
+          <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-violet-100 to-fuchsia-100 flex items-center justify-center text-violet-500">
+            <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
             </svg>
           </div>
-          <h1 className="text-lg font-semibold text-slate-900 mb-2">Event Not Found</h1>
-          <p className="text-slate-500 text-sm">
+          <h1 className="text-xl font-semibold text-slate-900 mb-2">Event Not Found</h1>
+          <p className="text-slate-500">
             This event link may be invalid or the event may have been removed.
           </p>
         </div>
@@ -198,162 +259,252 @@ export default function PublicEventPage() {
     );
   }
 
-  // Shared form component
-  const renderForm = () => (
-    <div className="bg-white rounded-lg shadow-sm p-5">
-      <h2 className="text-base font-semibold text-slate-900 mb-1">
-        {editingGuestId ? 'Update Guest' : 'Add Guest'}
-      </h2>
-      {event.cutoff_datetime && (
-        <p className="text-xs text-slate-500 mb-4">
-          Cut-off: {formatDateTime(event.cutoff_datetime)}
-        </p>
-      )}
+  // Modal component
+  const renderModal = () => (
+    <div className={`fixed inset-0 z-50 ${isModalOpen ? '' : 'pointer-events-none'}`}>
+      {/* Backdrop */}
+      <div
+        className={`absolute inset-0 bg-black/50 backdrop-blur-sm transition-opacity duration-300 ${isModalOpen ? 'opacity-100' : 'opacity-0'}`}
+        onClick={closeModal}
+      />
 
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <label htmlFor="name" className="block text-sm font-medium text-slate-700 mb-1.5">
-              Name *
-            </label>
-            <input
-              type="text"
-              id="name"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="Guest name"
-              className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-slate-900 focus:border-transparent transition-shadow"
-              disabled={submitting}
-            />
-          </div>
-
-          <div>
-            <label htmlFor="dietaryNotes" className="block text-sm font-medium text-slate-700 mb-1.5">
-              Dietary requirements / allergies
-            </label>
-            <input
-              type="text"
-              id="dietaryNotes"
-              value={dietaryNotes}
-              onChange={(e) => setDietaryNotes(e.target.value)}
-              placeholder="e.g. Vegetarian, nut allergy"
-              className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-slate-900 focus:border-transparent transition-shadow"
-              disabled={submitting}
-            />
-          </div>
-        </div>
-
-        <div>
-          <label htmlFor="foodOrder" className="block text-sm font-medium text-slate-700 mb-1.5">
-            Food order
-          </label>
-          <textarea
-            id="foodOrder"
-            value={foodOrder}
-            onChange={(e) => setFoodOrder(e.target.value)}
-            placeholder="e.g. Steak pie + chips"
-            rows={2}
-            className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-slate-900 focus:border-transparent resize-none transition-shadow"
-            disabled={submitting}
-          />
-        </div>
-
-        {submitError && (
-          <div className="bg-red-50 border border-red-200 text-red-700 px-3 py-2 rounded-lg text-sm">
-            {submitError}
-          </div>
-        )}
-
-        <div className="flex gap-3">
-          <button
-            type="submit"
-            disabled={submitting}
-            className="px-6 py-2.5 bg-gradient-to-r from-violet-500 to-fuchsia-500 text-white rounded-xl text-sm font-semibold hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg shadow-violet-500/25"
-          >
-            {submitting ? 'Saving...' : editingGuestId ? 'Update' : 'Add'}
-          </button>
-          {editingGuestId && (
+      {/* Modal */}
+      <div className={`absolute inset-x-4 top-1/2 -translate-y-1/2 max-w-lg mx-auto transition-all duration-300 ${isModalOpen ? 'opacity-100 scale-100' : 'opacity-0 scale-95'}`}>
+        <div className="bg-white rounded-2xl shadow-2xl overflow-hidden">
+          {/* Modal Header */}
+          <div className="px-6 py-5 flex items-center justify-between border-b border-slate-100 bg-gradient-to-r from-violet-500 to-fuchsia-500">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-white/20 rounded-xl">
+                <UsersIcon />
+              </div>
+              <h2 className="text-lg font-semibold text-white">
+                {editingGuestId ? 'Update Guest' : 'Add Guest'}
+              </h2>
+            </div>
             <button
-              type="button"
-              onClick={handleCancelEdit}
-              className="px-6 py-2.5 bg-slate-100 text-slate-700 rounded-lg text-sm font-medium hover:bg-slate-200 transition-colors"
+              onClick={closeModal}
+              className="p-2 text-white/70 hover:text-white hover:bg-white/10 rounded-xl transition-colors"
             >
-              Cancel
+              <CloseIcon />
             </button>
-          )}
+          </div>
+
+          {/* Modal Body */}
+          <form onSubmit={handleSubmit} className="p-6 space-y-5">
+            {/* Name Field */}
+            <div>
+              <label htmlFor="name" className="block text-sm font-medium text-slate-700 mb-2">
+                Guest Name <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="text"
+                id="name"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="Enter name"
+                className="w-full px-4 py-3.5 border border-slate-200 rounded-xl text-base focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent transition-shadow"
+                disabled={submitting}
+                autoFocus
+              />
+            </div>
+
+            {/* Dietary Requirements */}
+            <div>
+              <label htmlFor="dietaryNotes" className="block text-sm font-medium text-slate-700 mb-2">
+                Dietary Requirements / Allergies
+              </label>
+              <input
+                type="text"
+                id="dietaryNotes"
+                value={dietaryNotes}
+                onChange={(e) => setDietaryNotes(e.target.value)}
+                placeholder="e.g. Vegetarian, nut allergy"
+                className="w-full px-4 py-3.5 border border-slate-200 rounded-xl text-base focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent transition-shadow"
+                disabled={submitting}
+              />
+            </div>
+
+            {/* Food Order */}
+            <div>
+              <label htmlFor="foodOrder" className="block text-sm font-medium text-slate-700 mb-2">
+                Food Order
+              </label>
+              <textarea
+                id="foodOrder"
+                value={foodOrder}
+                onChange={(e) => setFoodOrder(e.target.value)}
+                placeholder="e.g. Steak pie + chips"
+                rows={3}
+                className="w-full px-4 py-3.5 border border-slate-200 rounded-xl text-base focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent resize-none transition-shadow"
+                disabled={submitting}
+              />
+            </div>
+
+            {/* Error Message */}
+            {submitError && (
+              <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl text-sm">
+                {submitError}
+              </div>
+            )}
+
+            {/* Action Buttons */}
+            <div className="flex gap-3 pt-2">
+              <button
+                type="button"
+                onClick={closeModal}
+                className="flex-1 py-3.5 px-6 border border-slate-200 rounded-xl text-base font-medium text-slate-700 bg-white hover:bg-slate-50 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                disabled={submitting}
+                className="flex-1 py-3.5 px-6 bg-gradient-to-r from-violet-500 to-fuchsia-500 text-white rounded-xl text-base font-semibold hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg shadow-violet-500/25"
+              >
+                {submitting ? 'Saving...' : editingGuestId ? 'Update' : 'Add Guest'}
+              </button>
+            </div>
+          </form>
         </div>
-      </form>
+      </div>
     </div>
   );
 
-  // Shared guest list component
+  // Guest list component
   const renderGuestList = () => (
-    <div className="bg-white rounded-lg shadow-sm p-5">
-      <h2 className="text-base font-semibold text-slate-900 mb-4">
-        Current Group ({guests.length} attending)
-      </h2>
+    <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+      <div className="px-6 py-5 flex items-center justify-between border-b border-slate-100">
+        <div className="flex items-center gap-4">
+          <div className="p-3 bg-gradient-to-br from-violet-100 to-fuchsia-100 text-violet-600 rounded-xl">
+            <UsersIcon />
+          </div>
+          <div>
+            <h2 className="text-lg font-semibold text-slate-900">Guest List</h2>
+            <p className="text-sm text-slate-500">{guests.length} attending</p>
+          </div>
+        </div>
+        {canEdit() && (
+          <button
+            onClick={() => openModal()}
+            className="inline-flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-violet-500 to-fuchsia-500 text-white rounded-xl text-sm font-semibold hover:opacity-90 transition-all shadow-lg shadow-violet-500/25"
+          >
+            <PlusIcon />
+            <span className="hidden sm:inline">Add Guest</span>
+          </button>
+        )}
+      </div>
 
-      {guests.length === 0 ? (
-        <p className="text-slate-500 text-sm">No guests added yet.</p>
-      ) : (
-        <ul className="divide-y divide-slate-100">
-          {guests.map((guest, index) => (
-            <li key={guest.id} className="py-3 first:pt-0 last:pb-0">
-              <div className="flex items-start justify-between gap-3">
-                <div className="flex items-start gap-3 flex-1 min-w-0">
-                  <span className="w-6 h-6 flex items-center justify-center rounded-full bg-slate-100 text-xs font-medium text-slate-600 flex-shrink-0 mt-0.5">
-                    {index + 1}
-                  </span>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <span className="font-medium text-slate-900 text-sm">{guest.name}</span>
-                      {guest.dietary_notes && (
-                        <span className="text-amber-700 bg-amber-50 border border-amber-200 text-xs px-2 py-0.5 rounded-full">
-                          {guest.dietary_notes}
-                        </span>
+      <div className="p-6">
+        {guests.length === 0 ? (
+          <div className="text-center py-8">
+            <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-violet-100 to-fuchsia-100 flex items-center justify-center text-violet-500">
+              <UsersIcon />
+            </div>
+            <p className="text-slate-900 font-medium">No guests yet</p>
+            <p className="text-sm text-slate-500 mt-1">Be the first to join!</p>
+            {canEdit() && (
+              <button
+                onClick={() => openModal()}
+                className="mt-4 inline-flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-violet-500 to-fuchsia-500 text-white rounded-xl text-sm font-semibold hover:opacity-90 transition-all shadow-lg shadow-violet-500/25"
+              >
+                <PlusIcon />
+                Add Guest
+              </button>
+            )}
+          </div>
+        ) : (
+          <ul className="space-y-3">
+            {guests.map((guest, index) => (
+              <li
+                key={guest.id}
+                className="p-4 bg-slate-50 rounded-xl hover:bg-slate-100 transition-colors"
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex items-start gap-3 sm:gap-4 flex-1 min-w-0">
+                    <span className="w-8 h-8 flex items-center justify-center rounded-full bg-gradient-to-br from-violet-500 to-fuchsia-500 text-sm font-semibold text-white flex-shrink-0">
+                      {index + 1}
+                    </span>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="font-semibold text-slate-900">{guest.name}</span>
+                        {guest.dietary_notes && (
+                          <span className="text-amber-700 bg-amber-50 border border-amber-200 text-xs px-2.5 py-1 rounded-full font-medium">
+                            {guest.dietary_notes}
+                          </span>
+                        )}
+                      </div>
+                      {guest.food_order && (
+                        <p className="text-slate-600 mt-1">{guest.food_order}</p>
                       )}
                     </div>
-                    {guest.food_order && (
-                      <p className="text-slate-500 text-sm mt-0.5">{guest.food_order}</p>
-                    )}
                   </div>
+                  {canEdit() && (
+                    <div className="relative flex-shrink-0">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setOpenMenuId(openMenuId === guest.id ? null : guest.id);
+                        }}
+                        className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-200 rounded-lg transition-colors"
+                      >
+                        <MoreIcon />
+                      </button>
+                      {openMenuId === guest.id && (
+                        <div className="absolute right-0 bottom-full mb-1 w-32 bg-white rounded-xl shadow-lg border border-slate-200 py-1 z-10">
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setOpenMenuId(null);
+                              openModal(guest);
+                            }}
+                            className="w-full px-4 py-2.5 text-left text-sm font-medium text-slate-700 hover:bg-violet-50 hover:text-violet-600 transition-colors"
+                          >
+                            Edit
+                          </button>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setOpenMenuId(null);
+                              handleRemove(guest.id);
+                            }}
+                            className="w-full px-4 py-2.5 text-left text-sm font-medium text-slate-700 hover:bg-red-50 hover:text-red-600 transition-colors"
+                          >
+                            Remove
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
-                {canEdit() && (
-                  <div className="flex gap-4 flex-shrink-0">
-                    <button
-                      onClick={() => handleEdit(guest)}
-                      className="text-slate-500 text-xs font-medium hover:text-slate-900 transition-colors"
-                    >
-                      Edit
-                    </button>
-                    <button
-                      onClick={() => handleRemove(guest.id)}
-                      className="text-slate-500 text-xs font-medium hover:text-slate-900 transition-colors"
-                    >
-                      Remove
-                    </button>
-                  </div>
-                )}
-              </div>
-            </li>
-          ))}
-        </ul>
-      )}
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
     </div>
   );
 
-  // Shared closed notice
+  // Closed notice
   const renderClosedNotice = () => (
     !isOwner && isClosedForGuests() && (
-      <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
-        <p className="text-amber-800 text-sm font-medium">
-          {event.is_locked ? 'Registration is locked' : 'Registration has closed'}
-        </p>
-        {event.cutoff_datetime && !event.is_locked && (
-          <p className="text-amber-700 text-xs mt-1">
-            Cut-off was {formatDateTime(event.cutoff_datetime)}
-          </p>
-        )}
+      <div className="bg-amber-50 border border-amber-200 rounded-2xl p-5">
+        <div className="flex items-start gap-4">
+          <div className="p-2 bg-amber-100 rounded-xl text-amber-600 flex-shrink-0">
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 15v2m0 0v2m0-2h2m-2 0H10m9.364-8.364l-1.414 1.414M21 12h-2m0 0h-2M12 3v2m0 0v2m0-2h2M5.636 5.636l1.414 1.414M3 12h2m0 0h2m9 9l-1.414-1.414M12 21v-2m0 0v-2m0 2h-2" />
+            </svg>
+          </div>
+          <div>
+            <p className="text-amber-800 font-semibold">
+              {event.is_locked ? 'Registration is locked' : 'Registration has closed'}
+            </p>
+            {event.cutoff_datetime && !event.is_locked && (
+              <p className="text-amber-700 text-sm mt-1">
+                Cut-off was {formatDateTime(event.cutoff_datetime)}
+              </p>
+            )}
+          </div>
+        </div>
       </div>
     )
   );
@@ -364,11 +515,13 @@ export default function PublicEventPage() {
   if (hasBranding) {
     return (
       <div className="min-h-screen bg-slate-50">
+        {renderModal()}
+
         {/* Header - with hero image or logo-only */}
         <header className="relative">
           {branding.hero_image_url ? (
             /* Hero Image Header */
-            <div className="relative h-40 md:h-52 lg:h-64 overflow-hidden">
+            <div className="relative h-48 md:h-64 lg:h-80 overflow-hidden">
               <Image
                 src={getHeroUrl(branding.hero_image_url)}
                 alt={event.restaurant_name}
@@ -378,29 +531,32 @@ export default function PublicEventPage() {
                 unoptimized
               />
               {/* Gradient Overlay */}
-              <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-black/50" />
+              <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-transparent to-black/60" />
 
               {/* Back Button - for owners */}
               {isOwner && (
                 <div className="absolute top-4 left-4 z-10">
                   <Link
                     href={`/dashboard/event/${event.id}`}
-                    className="inline-flex items-center px-3 py-1.5 rounded-lg text-sm font-medium bg-white/90 text-slate-700 hover:bg-white transition-colors"
+                    className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium bg-white/90 text-slate-700 hover:bg-white transition-colors shadow-lg"
                   >
-                    ← Back to Event
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                    </svg>
+                    Back to Event
                   </Link>
                 </div>
               )}
 
               {/* Logo positioned on the image (if uploaded) */}
               {branding.logo_url && (
-                <div className="absolute bottom-4 left-1/2 -translate-x-1/2">
+                <div className="absolute bottom-6 left-1/2 -translate-x-1/2">
                   <Image
                     src={getLogoUrl(branding.logo_url)}
                     alt={event.restaurant_name}
-                    width={120}
-                    height={60}
-                    className="max-h-16 md:max-h-20 w-auto drop-shadow-lg"
+                    width={160}
+                    height={80}
+                    className="max-h-20 md:max-h-24 w-auto drop-shadow-lg"
                     unoptimized
                   />
                 </div>
@@ -408,15 +564,18 @@ export default function PublicEventPage() {
             </div>
           ) : (
             /* Logo-only Header (no hero image) */
-            <div className="bg-white border-b border-slate-200">
-              <div className="px-4 py-4 md:py-6 max-w-2xl md:max-w-4xl lg:max-w-5xl mx-auto">
+            <div className="bg-white border-b-2 border-transparent" style={{ borderImage: 'linear-gradient(to right, #8b5cf6, #d946ef) 1' }}>
+              <div className="px-4 py-6 md:py-8 max-w-3xl mx-auto">
                 {isOwner && (
-                  <div className="mb-3">
+                  <div className="mb-4">
                     <Link
                       href={`/dashboard/event/${event.id}`}
-                      className="text-sm text-slate-600 hover:text-slate-900 transition-colors"
+                      className="inline-flex items-center gap-2 text-sm text-slate-600 hover:text-violet-600 transition-colors"
                     >
-                      ← Back to Event
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                      </svg>
+                      Back to Event
                     </Link>
                   </div>
                 )}
@@ -426,7 +585,7 @@ export default function PublicEventPage() {
                     alt={event.restaurant_name}
                     width={200}
                     height={80}
-                    className="max-h-16 md:max-h-20 w-auto"
+                    className="max-h-20 md:max-h-24 w-auto"
                     unoptimized
                   />
                 </div>
@@ -435,136 +594,165 @@ export default function PublicEventPage() {
           )}
         </header>
 
-        <main className="px-4 py-6 max-w-2xl md:max-w-4xl lg:max-w-5xl mx-auto space-y-4">
-          {/* Event Info */}
-          <div className="bg-white rounded-lg shadow-sm p-5">
-            <h1 className="text-xl font-semibold text-slate-900 mb-1">{event.event_name}</h1>
-            <p className="text-slate-600">{formatDateTime(event.event_date_time)}</p>
-
-            {event.menu_link && (
-              <a
-                href={event.menu_link}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-1.5 mt-3 text-sm text-slate-600 hover:text-slate-900 transition-colors"
-              >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                </svg>
-                View Menu
-              </a>
+        <main className="px-4 py-8 max-w-3xl mx-auto space-y-6">
+          {/* Event Info Card */}
+          <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+            <div className="px-6 py-5 flex items-center gap-4 border-b border-slate-100">
+              <div className="p-3 bg-gradient-to-br from-fuchsia-100 to-pink-100 text-fuchsia-600 rounded-xl">
+                <CalendarIcon />
+              </div>
+              <div className="flex-1 min-w-0">
+                <h1 className="text-xl font-bold text-slate-900 truncate">{event.event_name}</h1>
+                <p className="text-slate-600">{formatDateTime(event.event_date_time)}</p>
+              </div>
+            </div>
+            {(event.menu_link || (event.cutoff_datetime && !isClosedForGuests())) && (
+              <div className="px-6 py-4 flex flex-wrap items-center gap-4">
+                {event.menu_link && (
+                  <a
+                    href={event.menu_link}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-2 px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-sm font-medium transition-colors"
+                  >
+                    <MenuIcon />
+                    View Menu
+                  </a>
+                )}
+                {event.cutoff_datetime && !isClosedForGuests() && (
+                  <p className="text-sm text-slate-500">
+                    <span className="font-medium">Cut-off:</span> {formatDateTime(event.cutoff_datetime)}
+                  </p>
+                )}
+              </div>
             )}
           </div>
 
           {/* Registration Status */}
           {renderClosedNotice()}
 
-          {/* Add/Edit Form */}
-          {canEdit() && renderForm()}
-
           {/* Guest List */}
           {renderGuestList()}
 
-          {/* Footer Note - only show for non-owners when closed */}
-          {!isOwner && isClosedForGuests() && (
-            <p className="text-center text-slate-400 text-xs px-4">
-              Editing is closed. Please contact the restaurant or your booking lead for changes.
-            </p>
-          )}
+          {/* Footer Notes */}
+          <div className="space-y-3 pt-4">
+            {!isOwner && isClosedForGuests() && (
+              <p className="text-center text-slate-400 text-sm">
+                Editing is closed. Please contact the restaurant or your booking lead for changes.
+              </p>
+            )}
 
-          {/* Terms Notice */}
-          {branding?.terms_link && (
-            <p className="text-center text-slate-400 text-xs px-4">
-              Please remove any guests who can no longer attend. Remaining on the list at cutoff confirms attendance and acceptance of our{' '}
-              <a
-                href={branding.terms_link}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-slate-500 hover:text-slate-700 underline transition-colors"
-              >
-                booking terms
-              </a>.
-            </p>
-          )}
+            {branding?.terms_link && (
+              <p className="text-center text-slate-400 text-sm">
+                Please remove any guests who can no longer attend. Remaining on the list at cutoff confirms attendance and acceptance of our{' '}
+                <a
+                  href={branding.terms_link}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-violet-500 hover:text-violet-700 underline transition-colors"
+                >
+                  booking terms
+                </a>.
+              </p>
+            )}
+          </div>
         </main>
       </div>
     );
   }
 
   // =============================================================================
-  // ORIGINAL PLAIN VERSION
+  // ORIGINAL PLAIN VERSION (without branding)
   // =============================================================================
   return (
     <div className="min-h-screen bg-slate-50">
+      {renderModal()}
+
       {/* Header */}
-      <header className="bg-white border-b border-slate-200">
-        <div className="px-4 py-4 max-w-2xl md:max-w-4xl lg:max-w-5xl mx-auto">
+      <header className="bg-white border-b-2 border-transparent" style={{ borderImage: 'linear-gradient(to right, #8b5cf6, #d946ef) 1' }}>
+        <div className="px-4 py-6 max-w-3xl mx-auto">
           {isOwner && (
-            <div className="mb-2">
+            <div className="mb-4">
               <Link
                 href={`/dashboard/event/${event.id}`}
-                className="text-sm text-slate-600 hover:text-slate-900 transition-colors"
+                className="inline-flex items-center gap-2 text-sm text-slate-600 hover:text-violet-600 transition-colors"
               >
-                ← Back to Event
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                </svg>
+                Back to Event
               </Link>
             </div>
           )}
-          <p className="text-sm text-slate-500 text-center">{event.restaurant_name}</p>
-          <p className="text-xs text-slate-400 text-center">Group Booking</p>
+          <div className="text-center">
+            <p className="text-violet-600 font-medium">{event.restaurant_name}</p>
+            <p className="text-xs text-slate-400 mt-0.5">Group Booking</p>
+          </div>
         </div>
       </header>
 
-      <main className="px-4 py-6 max-w-2xl md:max-w-4xl lg:max-w-5xl mx-auto space-y-4">
-        {/* Event Info */}
-        <div className="bg-white rounded-lg shadow-sm p-5">
-          <h1 className="text-xl font-semibold text-slate-900 mb-1">{event.event_name}</h1>
-          <p className="text-slate-600">{formatDateTime(event.event_date_time)}</p>
-
-          {event.menu_link && (
-            <a
-              href={event.menu_link}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-1.5 mt-3 text-sm text-slate-600 hover:text-slate-900 transition-colors"
-            >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-              </svg>
-              View Menu
-            </a>
+      <main className="px-4 py-8 max-w-3xl mx-auto space-y-6">
+        {/* Event Info Card */}
+        <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+          <div className="px-6 py-5 flex items-center gap-4 border-b border-slate-100">
+            <div className="p-3 bg-gradient-to-br from-fuchsia-100 to-pink-100 text-fuchsia-600 rounded-xl">
+              <CalendarIcon />
+            </div>
+            <div className="flex-1 min-w-0">
+              <h1 className="text-xl font-bold text-slate-900 truncate">{event.event_name}</h1>
+              <p className="text-slate-600">{formatDateTime(event.event_date_time)}</p>
+            </div>
+          </div>
+          {(event.menu_link || (event.cutoff_datetime && !isClosedForGuests())) && (
+            <div className="px-6 py-4 flex flex-wrap items-center gap-4">
+              {event.menu_link && (
+                <a
+                  href={event.menu_link}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-sm font-medium transition-colors"
+                >
+                  <MenuIcon />
+                  View Menu
+                </a>
+              )}
+              {event.cutoff_datetime && !isClosedForGuests() && (
+                <p className="text-sm text-slate-500">
+                  <span className="font-medium">Cut-off:</span> {formatDateTime(event.cutoff_datetime)}
+                </p>
+              )}
+            </div>
           )}
         </div>
 
         {/* Registration Status */}
         {renderClosedNotice()}
 
-        {/* Add/Edit Form */}
-        {canEdit() && renderForm()}
-
         {/* Guest List */}
         {renderGuestList()}
 
-        {/* Footer Note - only show for non-owners when closed */}
-        {!isOwner && isClosedForGuests() && (
-          <p className="text-center text-slate-400 text-xs px-4">
-            Editing is closed. Please contact the restaurant or your booking lead for changes.
-          </p>
-        )}
+        {/* Footer Notes */}
+        <div className="space-y-3 pt-4">
+          {!isOwner && isClosedForGuests() && (
+            <p className="text-center text-slate-400 text-sm">
+              Editing is closed. Please contact the restaurant or your booking lead for changes.
+            </p>
+          )}
 
-        {/* Terms Notice */}
-        {branding?.terms_link && (
-          <p className="text-center text-slate-400 text-xs px-4">
-            Please remove any guests who can no longer attend. Remaining on the list at cutoff confirms attendance and acceptance of our{' '}
-            <a
-              href={branding.terms_link}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-slate-500 hover:text-slate-700 underline transition-colors"
-            >
-              booking terms
-            </a>.
-          </p>
-        )}
+          {branding?.terms_link && (
+            <p className="text-center text-slate-400 text-sm">
+              Please remove any guests who can no longer attend. Remaining on the list at cutoff confirms attendance and acceptance of our{' '}
+              <a
+                href={branding.terms_link}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-violet-500 hover:text-violet-700 underline transition-colors"
+              >
+                booking terms
+              </a>.
+            </p>
+          )}
+        </div>
       </main>
     </div>
   );
