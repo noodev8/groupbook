@@ -102,8 +102,14 @@ export default function EventSummaryPage() {
   // Show loading state
   if (isLoading || loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
-        <p className="text-gray-500 text-sm md:text-base">Loading...</p>
+      <div className="min-h-screen flex items-center justify-center bg-slate-50 px-4">
+        <div className="flex items-center gap-3 text-slate-500">
+          <svg className="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
+            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+          </svg>
+          <span>Loading...</span>
+        </div>
       </div>
     );
   }
@@ -116,16 +122,16 @@ export default function EventSummaryPage() {
   // Show error state
   if (error) {
     return (
-      <div className="min-h-screen bg-gray-50">
-        <header className="bg-white shadow print:hidden">
-          <div className="max-w-7xl mx-auto px-4 py-4 sm:px-6 lg:px-8">
-            <Link href={`/dashboard/event/${eventId}`} className="text-sm md:text-base text-blue-600 hover:text-blue-800">
-              &larr; Back to Event
+      <div className="min-h-screen bg-slate-50">
+        <header className="bg-white border-b border-slate-200 print:hidden">
+          <div className="max-w-2xl md:max-w-4xl lg:max-w-5xl mx-auto px-4 py-4 sm:px-6 lg:px-8">
+            <Link href={`/dashboard/event/${eventId}`} className="text-sm text-slate-600 hover:text-slate-900 transition-colors">
+              ← Back to Event
             </Link>
           </div>
         </header>
-        <main className="max-w-7xl mx-auto px-4 py-6 md:py-8 sm:px-6 lg:px-8">
-          <div className="bg-red-50 border border-red-200 text-red-700 px-3 md:px-4 py-2 md:py-3 rounded text-sm md:text-base">
+        <main className="max-w-2xl md:max-w-4xl lg:max-w-5xl mx-auto px-4 py-6 sm:px-6 lg:px-8">
+          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
             {error}
           </div>
         </main>
@@ -146,15 +152,18 @@ export default function EventSummaryPage() {
       <style dangerouslySetInnerHTML={{ __html: printStyles }} />
 
       {/* Header - hidden when printing */}
-      <header className="bg-white shadow print:hidden">
-        <div className="max-w-7xl mx-auto px-4 py-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between gap-3 md:gap-4">
-            <Link href={`/dashboard/event/${eventId}`} className="text-sm md:text-base text-blue-600 hover:text-blue-800">
-              &larr; Back to Event
-            </Link>
+      <header className="bg-white border-b border-slate-200 print:hidden">
+        <div className="max-w-2xl md:max-w-4xl lg:max-w-5xl mx-auto px-4 py-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between gap-4">
+            <div>
+              <Link href={`/dashboard/event/${eventId}`} className="text-sm text-slate-600 hover:text-slate-900 transition-colors">
+                ← Back to Event
+              </Link>
+              <h1 className="text-xl sm:text-2xl font-semibold text-slate-900 mt-1">Summary Report</h1>
+            </div>
             <button
               onClick={handlePrint}
-              className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 text-sm"
+              className="px-5 py-2.5 bg-slate-900 text-white rounded-lg hover:bg-slate-800 transition-colors text-sm font-medium"
             >
               Print Report
             </button>
@@ -163,14 +172,14 @@ export default function EventSummaryPage() {
       </header>
 
       {/* Main Content */}
-      <main className="print-container max-w-4xl mx-auto px-4 py-6 md:py-8 sm:px-6 lg:px-8 print:max-w-none">
+      <main className="print-container max-w-2xl md:max-w-4xl lg:max-w-5xl mx-auto px-4 py-6 sm:px-6 lg:px-8 print:max-w-none">
         {/* Event Header */}
-        <div className="mb-6 print:mb-4">
-          <h1 className="text-2xl font-bold text-gray-900 print:text-xl">{event.event_name}</h1>
-          <p className="text-gray-600 mt-1">{event.restaurant_name}</p>
-          <p className="text-gray-600">{formatDateTime(event.event_date_time)}</p>
+        <div className="mb-8 print:mb-4">
+          <h2 className="text-2xl font-semibold text-slate-900 print:text-xl">{event.event_name}</h2>
+          <p className="text-slate-600 mt-1">{event.restaurant_name}</p>
+          <p className="text-slate-600">{formatDateTime(event.event_date_time)}</p>
           {event.party_lead_name && (
-            <p className="text-gray-600 mt-2">
+            <p className="text-slate-600 mt-2">
               <span className="font-medium">Party Lead:</span> {event.party_lead_name}
               {event.party_lead_phone && ` - ${event.party_lead_phone}`}
             </p>
@@ -178,58 +187,58 @@ export default function EventSummaryPage() {
         </div>
 
         {/* Summary Stats */}
-        <div className="grid grid-cols-3 gap-4 mb-6 print:mb-4 print:gap-2">
-          <div className="bg-gray-50 rounded-lg p-4 text-center print:bg-gray-100 print:p-2">
-            <div className="text-3xl font-bold text-gray-900 print:text-2xl">{guests.length}</div>
-            <div className="text-sm text-gray-600">Total Guests</div>
+        <div className="grid grid-cols-3 gap-4 mb-8 print:mb-4 print:gap-2">
+          <div className="bg-slate-50 rounded-lg p-4 text-center print:bg-slate-100 print:p-2">
+            <div className="text-3xl font-semibold text-slate-900 print:text-2xl">{guests.length}</div>
+            <div className="text-sm text-slate-600">Total Guests</div>
           </div>
-          <div className="bg-gray-50 rounded-lg p-4 text-center print:bg-gray-100 print:p-2">
-            <div className="text-3xl font-bold text-gray-900 print:text-2xl">{guestsWithOrders}</div>
-            <div className="text-sm text-gray-600">Food Orders</div>
+          <div className="bg-slate-50 rounded-lg p-4 text-center print:bg-slate-100 print:p-2">
+            <div className="text-3xl font-semibold text-slate-900 print:text-2xl">{guestsWithOrders}</div>
+            <div className="text-sm text-slate-600">Food Orders</div>
           </div>
-          <div className="bg-gray-50 rounded-lg p-4 text-center print:bg-gray-100 print:p-2">
-            <div className="text-3xl font-bold text-gray-900 print:text-2xl">{guestsWithDietary}</div>
-            <div className="text-sm text-gray-600">Dietary Notes</div>
+          <div className="bg-slate-50 rounded-lg p-4 text-center print:bg-slate-100 print:p-2">
+            <div className="text-3xl font-semibold text-slate-900 print:text-2xl">{guestsWithDietary}</div>
+            <div className="text-sm text-slate-600">Dietary Notes</div>
           </div>
         </div>
 
         {/* Guest List */}
-        <div className="mb-6 print:mb-4">
-          <h2 className="text-lg font-semibold text-gray-900 mb-3 print:text-base print:mb-2">Guest List</h2>
+        <div className="mb-8 print:mb-4">
+          <h3 className="text-base font-semibold text-slate-900 mb-4 print:text-base print:mb-2">Guest List</h3>
           {guests.length === 0 ? (
-            <p className="text-gray-500 text-sm">No guests have joined yet.</p>
+            <p className="text-slate-500 text-sm">No guests have joined yet.</p>
           ) : (
-            <div className="border border-gray-200 rounded-lg overflow-hidden print:border-gray-300">
-              <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50">
+            <div className="bg-white rounded-lg shadow-sm overflow-hidden print:shadow-none print:border print:border-slate-300">
+              <table className="min-w-full divide-y divide-slate-200">
+                <thead className="bg-slate-50">
                   <tr>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider print:px-2 print:py-2">
+                    <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider print:px-2 print:py-2">
                       #
                     </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider print:px-2 print:py-2">
+                    <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider print:px-2 print:py-2">
                       Name
                     </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider print:px-2 print:py-2">
+                    <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider print:px-2 print:py-2">
                       Food Order
                     </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider print:px-2 print:py-2">
+                    <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider print:px-2 print:py-2">
                       Dietary Notes
                     </th>
                   </tr>
                 </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
+                <tbody className="bg-white divide-y divide-slate-100">
                   {guests.map((guest, index) => (
-                    <tr key={guest.id} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
-                      <td className="px-4 py-3 text-sm text-gray-500 print:px-2 print:py-1">
+                    <tr key={guest.id} className={index % 2 === 0 ? 'bg-white' : 'bg-slate-50'}>
+                      <td className="px-4 py-3 text-sm text-slate-500 print:px-2 print:py-1">
                         {index + 1}
                       </td>
-                      <td className="px-4 py-3 text-sm text-gray-900 font-medium print:px-2 print:py-1">
+                      <td className="px-4 py-3 text-sm text-slate-900 font-medium print:px-2 print:py-1">
                         {guest.name}
                       </td>
-                      <td className="px-4 py-3 text-sm text-gray-700 print:px-2 print:py-1">
+                      <td className="px-4 py-3 text-sm text-slate-700 print:px-2 print:py-1">
                         {guest.food_order || '-'}
                       </td>
-                      <td className="px-4 py-3 text-sm text-gray-700 print:px-2 print:py-1">
+                      <td className="px-4 py-3 text-sm text-slate-700 print:px-2 print:py-1">
                         {guest.dietary_notes || '-'}
                       </td>
                     </tr>
@@ -241,7 +250,7 @@ export default function EventSummaryPage() {
         </div>
 
         {/* Footer - visible on print */}
-        <div className="text-center text-xs text-gray-400 mt-8 print:mt-4">
+        <div className="text-center text-xs text-slate-400 mt-8 print:mt-4">
           Generated {new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
         </div>
       </main>

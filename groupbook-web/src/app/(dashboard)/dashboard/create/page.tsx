@@ -12,7 +12,8 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/context/AuthContext';
-import { createEvent } from '@/lib/api';
+import { createEvent, getBillingStatus } from '@/lib/api';
+import UpgradeModal from '@/components/UpgradeModal';
 
 export default function CreateEventPage() {
   const { user, isLoading } = useAuth();
@@ -28,12 +29,35 @@ export default function CreateEventPage() {
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // Billing state
+  const [checkingBilling, setCheckingBilling] = useState(true);
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
+
   // Redirect to login if not authenticated
   useEffect(() => {
     if (!isLoading && !user) {
       router.push('/login');
     }
   }, [user, isLoading, router]);
+
+  // Check billing status on mount
+  useEffect(() => {
+    const checkBilling = async () => {
+      const result = await getBillingStatus();
+      if (result.success && result.data) {
+        const { billing } = result.data;
+        // If free user and already at limit, show upgrade modal
+        if (billing.event_limit !== null && billing.event_count >= billing.event_limit) {
+          setShowUpgradeModal(true);
+        }
+      }
+      setCheckingBilling(false);
+    };
+
+    if (user) {
+      checkBilling();
+    }
+  }, [user]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -60,11 +84,17 @@ export default function CreateEventPage() {
     }
   };
 
-  // Show loading state while checking auth
-  if (isLoading) {
+  // Show loading state while checking auth or billing
+  if (isLoading || checkingBilling) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
-        <p className="text-gray-500 text-sm md:text-base">Loading...</p>
+      <div className="min-h-screen flex items-center justify-center bg-slate-50 px-4">
+        <div className="flex items-center gap-3 text-slate-500">
+          <svg className="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
+            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+          </svg>
+          <span>Loading...</span>
+        </div>
       </div>
     );
   }
@@ -75,106 +105,127 @@ export default function CreateEventPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-slate-50">
+      {/* Upgrade Modal */}
+      <UpgradeModal
+        isOpen={showUpgradeModal}
+        onClose={() => {
+          setShowUpgradeModal(false);
+          router.push('/dashboard');
+        }}
+      />
+
       {/* Header */}
-      <header className="bg-white shadow">
-        <div className="max-w-7xl mx-auto px-4 py-4 sm:px-6 lg:px-8">
-          <div className="flex items-center gap-3 md:gap-4">
-            <Link href="/dashboard" className="text-sm md:text-base text-blue-600 hover:text-blue-800 flex-shrink-0">
-              &larr; Back
-            </Link>
-            <h1 className="text-lg sm:text-xl md:text-2xl font-bold text-gray-900">Create New Event</h1>
+      <header className="bg-white border-b border-slate-200">
+        <div className="max-w-2xl md:max-w-4xl lg:max-w-5xl mx-auto px-4 py-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between">
+            <div>
+              <Link
+                href="/dashboard"
+                className="text-sm text-slate-600 hover:text-slate-900 transition-colors"
+              >
+                ← Back to Dashboard
+              </Link>
+              <h1 className="text-xl sm:text-2xl font-semibold text-slate-900 mt-1">Create New Event</h1>
+            </div>
           </div>
         </div>
       </header>
 
       {/* Main Content */}
-      <main className="max-w-2xl mx-auto px-4 py-6 md:py-8 sm:px-6 lg:px-8">
-        <div className="bg-white rounded-lg shadow p-4 md:p-6">
-          <form onSubmit={handleSubmit} className="space-y-4 md:space-y-6">
+      <main className="max-w-2xl md:max-w-4xl lg:max-w-5xl mx-auto px-4 py-6 sm:px-6 lg:px-8">
+        <div className="bg-white rounded-lg shadow-sm p-6 md:p-8">
+          <form onSubmit={handleSubmit} className="space-y-8">
             {/* Error Message */}
             {error && (
-              <div className="bg-red-50 border border-red-200 text-red-700 px-3 md:px-4 py-2 md:py-3 rounded text-sm md:text-base">
+              <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
                 {error}
               </div>
             )}
 
-            {/* Event Name */}
-            <div>
-              <label htmlFor="eventName" className="block text-xs md:text-sm font-medium text-gray-700">
-                Event Name
-              </label>
-              <input
-                id="eventName"
-                type="text"
-                required
-                value={eventName}
-                onChange={(e) => setEventName(e.target.value)}
-                className="mt-1 block w-full px-3 py-2 md:py-2.5 border border-gray-300 rounded-md shadow-sm text-sm md:text-base focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                placeholder="e.g. Sarah's Birthday Dinner"
-              />
-            </div>
+            {/* Event Details Section */}
+            <div className="space-y-5">
+              <h2 className="text-base font-semibold text-slate-900">Event Details</h2>
 
-            {/* Event Date & Time */}
-            <div>
-              <label htmlFor="eventDateTime" className="block text-xs md:text-sm font-medium text-gray-700">
-                Event Date & Time
-              </label>
-              <input
-                id="eventDateTime"
-                type="datetime-local"
-                required
-                value={eventDateTime}
-                onChange={(e) => setEventDateTime(e.target.value)}
-                className="mt-1 block w-full px-3 py-2 md:py-2.5 border border-gray-300 rounded-md shadow-sm text-sm md:text-base focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-              />
-            </div>
+              {/* Event Name - Full Width */}
+              <div>
+                <label htmlFor="eventName" className="block text-sm font-medium text-slate-700 mb-1.5">
+                  Event Name *
+                </label>
+                <input
+                  id="eventName"
+                  type="text"
+                  required
+                  value={eventName}
+                  onChange={(e) => setEventName(e.target.value)}
+                  className="w-full px-3 py-2.5 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-slate-900 focus:border-transparent transition-shadow"
+                  placeholder="e.g. Sarah's Birthday Dinner"
+                />
+              </div>
 
-            {/* Cutoff Date & Time (Optional) */}
-            <div>
-              <label htmlFor="cutoffDatetime" className="block text-xs md:text-sm font-medium text-gray-700">
-                Guest Cutoff Date & Time <span className="text-gray-400">(optional)</span>
-              </label>
-              <input
-                id="cutoffDatetime"
-                type="datetime-local"
-                value={cutoffDatetime}
-                onChange={(e) => setCutoffDatetime(e.target.value)}
-                className="mt-1 block w-full px-3 py-2 md:py-2.5 border border-gray-300 rounded-md shadow-sm text-sm md:text-base focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-              />
-              <p className="mt-1 text-xs text-gray-500">
-                After this time, guests won&apos;t be able to add themselves
-              </p>
-            </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                {/* Event Date & Time */}
+                <div>
+                  <label htmlFor="eventDateTime" className="block text-sm font-medium text-slate-700 mb-1.5">
+                    Event Date & Time *
+                  </label>
+                  <input
+                    id="eventDateTime"
+                    type="datetime-local"
+                    required
+                    value={eventDateTime}
+                    onChange={(e) => setEventDateTime(e.target.value)}
+                    className="w-full px-3 py-2.5 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-slate-900 focus:border-transparent transition-shadow"
+                  />
+                </div>
 
-            {/* Menu Link (Optional) */}
-            <div>
-              <label htmlFor="menuLink" className="block text-xs md:text-sm font-medium text-gray-700">
-                Menu Link <span className="text-gray-400">(optional)</span>
-              </label>
-              <input
-                id="menuLink"
-                type="url"
-                value={menuLink}
-                onChange={(e) => setMenuLink(e.target.value)}
-                className="mt-1 block w-full px-3 py-2 md:py-2.5 border border-gray-300 rounded-md shadow-sm text-sm md:text-base focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                placeholder="https://yourrestaurant.com/menu"
-              />
-              <p className="mt-1 text-xs text-gray-500">
-                Guests will see this link when adding their food order
-              </p>
+                {/* Cutoff Date & Time (Optional) */}
+                <div>
+                  <label htmlFor="cutoffDatetime" className="block text-sm font-medium text-slate-700 mb-1.5">
+                    Guest Cutoff <span className="text-slate-400 font-normal">(optional)</span>
+                  </label>
+                  <input
+                    id="cutoffDatetime"
+                    type="datetime-local"
+                    value={cutoffDatetime}
+                    onChange={(e) => setCutoffDatetime(e.target.value)}
+                    className="w-full px-3 py-2.5 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-slate-900 focus:border-transparent transition-shadow"
+                  />
+                  <p className="mt-1.5 text-xs text-slate-500">
+                    After this time, guests can&apos;t add themselves
+                  </p>
+                </div>
+              </div>
+
+              {/* Menu Link (Optional) - Full Width */}
+              <div>
+                <label htmlFor="menuLink" className="block text-sm font-medium text-slate-700 mb-1.5">
+                  Menu Link <span className="text-slate-400 font-normal">(optional)</span>
+                </label>
+                <input
+                  id="menuLink"
+                  type="url"
+                  value={menuLink}
+                  onChange={(e) => setMenuLink(e.target.value)}
+                  className="w-full px-3 py-2.5 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-slate-900 focus:border-transparent transition-shadow"
+                  placeholder="https://yourrestaurant.com/menu"
+                />
+                <p className="mt-1.5 text-xs text-slate-500">
+                  Guests will see this link when adding their food order
+                </p>
+              </div>
             </div>
 
             {/* Party Lead Section */}
-            <div className="border-t border-gray-200 pt-4 md:pt-6">
-              <h3 className="text-xs md:text-sm font-medium text-gray-900 mb-3 md:mb-4">
-                Party Lead Details <span className="text-gray-400 font-normal">(optional)</span>
-              </h3>
+            <div className="border-t border-slate-200 pt-8">
+              <h2 className="text-base font-semibold text-slate-900 mb-5">
+                Party Lead <span className="text-slate-400 font-normal text-sm">(optional)</span>
+              </h2>
 
-              <div className="space-y-3 md:space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
                 {/* Party Lead Name */}
                 <div>
-                  <label htmlFor="partyLeadName" className="block text-xs md:text-sm font-medium text-gray-700">
+                  <label htmlFor="partyLeadName" className="block text-sm font-medium text-slate-700 mb-1.5">
                     Name
                   </label>
                   <input
@@ -182,14 +233,14 @@ export default function CreateEventPage() {
                     type="text"
                     value={partyLeadName}
                     onChange={(e) => setPartyLeadName(e.target.value)}
-                    className="mt-1 block w-full px-3 py-2 md:py-2.5 border border-gray-300 rounded-md shadow-sm text-sm md:text-base focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full px-3 py-2.5 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-slate-900 focus:border-transparent transition-shadow"
                     placeholder="e.g. Sarah Jones"
                   />
                 </div>
 
                 {/* Party Lead Email */}
                 <div>
-                  <label htmlFor="partyLeadEmail" className="block text-xs md:text-sm font-medium text-gray-700">
+                  <label htmlFor="partyLeadEmail" className="block text-sm font-medium text-slate-700 mb-1.5">
                     Email
                   </label>
                   <input
@@ -197,14 +248,14 @@ export default function CreateEventPage() {
                     type="email"
                     value={partyLeadEmail}
                     onChange={(e) => setPartyLeadEmail(e.target.value)}
-                    className="mt-1 block w-full px-3 py-2 md:py-2.5 border border-gray-300 rounded-md shadow-sm text-sm md:text-base focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full px-3 py-2.5 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-slate-900 focus:border-transparent transition-shadow"
                     placeholder="e.g. sarah@example.com"
                   />
                 </div>
 
                 {/* Party Lead Phone */}
                 <div>
-                  <label htmlFor="partyLeadPhone" className="block text-xs md:text-sm font-medium text-gray-700">
+                  <label htmlFor="partyLeadPhone" className="block text-sm font-medium text-slate-700 mb-1.5">
                     Phone
                   </label>
                   <input
@@ -212,25 +263,25 @@ export default function CreateEventPage() {
                     type="tel"
                     value={partyLeadPhone}
                     onChange={(e) => setPartyLeadPhone(e.target.value)}
-                    className="mt-1 block w-full px-3 py-2 md:py-2.5 border border-gray-300 rounded-md shadow-sm text-sm md:text-base focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full px-3 py-2.5 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-slate-900 focus:border-transparent transition-shadow"
                     placeholder="e.g. 07700 900123"
                   />
                 </div>
               </div>
             </div>
 
-            {/* Submit Button */}
-            <div className="flex flex-col-reverse sm:flex-row gap-3 md:gap-4 pt-4">
+            {/* Actions */}
+            <div className="flex flex-col-reverse sm:flex-row gap-3 pt-6 border-t border-slate-200">
               <Link
                 href="/dashboard"
-                className="flex-1 py-2 md:py-2.5 px-4 border border-gray-300 rounded-md shadow-sm text-sm md:text-base font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 text-center"
+                className="px-6 py-2.5 bg-slate-100 text-slate-700 rounded-lg text-sm font-medium hover:bg-slate-200 transition-colors text-center"
               >
                 Cancel
               </Link>
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="flex-1 py-2 md:py-2.5 px-4 border border-transparent rounded-md shadow-sm text-sm md:text-base font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="px-6 py-2.5 bg-slate-900 text-white rounded-lg text-sm font-medium hover:bg-slate-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
                 {isSubmitting ? 'Creating...' : 'Create Event'}
               </button>
