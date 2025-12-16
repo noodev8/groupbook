@@ -42,7 +42,7 @@ export default function LoginPage() {
       <div className="max-w-md w-full space-y-8">
         {/* Header */}
         <div className="text-center">
-          <h1 className="text-3xl font-bold text-gray-900">Group Book</h1>
+          <h1 className="text-3xl font-bold text-gray-900">Kitchen Ready</h1>
           <h2 className="mt-2 text-xl text-gray-600">Sign in to your account</h2>
         </div>
 
@@ -97,7 +97,7 @@ export default function LoginPage() {
           <button
             type="submit"
             disabled={isSubmitting}
-            className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full flex justify-center py-3 px-4 border border-transparent rounded-xl text-sm font-semibold text-white bg-gradient-to-r from-violet-500 to-fuchsia-500 hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-violet-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg shadow-violet-500/25"
           >
             {isSubmitting ? 'Signing in...' : 'Sign in'}
           </button>
@@ -105,7 +105,7 @@ export default function LoginPage() {
           {/* Register Link */}
           <p className="text-center text-sm text-gray-600">
             Don&apos;t have an account?{' '}
-            <Link href="/register" className="font-medium text-blue-600 hover:text-blue-500">
+            <Link href="/register" className="font-medium text-violet-600 hover:text-violet-500">
               Register here
             </Link>
           </p>
@@ -116,11 +116,11 @@ export default function LoginPage() {
           <p className="font-medium">Need help?</p>
           <p className="mt-1">Noodev8 Ltd</p>
           <p>
-            <a href="mailto:noodev8@gmail.com" className="text-blue-600 hover:text-blue-500">
+            <a href="mailto:noodev8@gmail.com" className="text-violet-600 hover:text-violet-500">
               noodev8@gmail.com
             </a>
             {' | '}
-            <a href="tel:07818443886" className="text-blue-600 hover:text-blue-500">
+            <a href="tel:07818443886" className="text-violet-600 hover:text-violet-500">
               07818 443886
             </a>
           </p>

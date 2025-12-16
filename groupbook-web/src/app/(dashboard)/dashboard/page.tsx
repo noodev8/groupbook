@@ -42,7 +42,7 @@ function DashboardContent() {
   useEffect(() => {
     const billing = searchParams.get('billing');
     if (billing === 'success') {
-      setSuccessMessage('Welcome to GroupBook Pro! You can now create unlimited events.');
+      setSuccessMessage('Welcome to Kitchen Ready Pro! You can now create unlimited events.');
       // Clear the URL param
       router.replace('/dashboard');
     }
@@ -128,10 +128,15 @@ function DashboardContent() {
       {/* Header */}
       <header className="bg-white border-b border-slate-200">
         <div className="max-w-6xl mx-auto px-4 py-4 sm:px-6 lg:px-8 flex justify-between items-center gap-4">
-          <div className="min-w-0 flex-1">
-            <h1 className="text-xl sm:text-2xl font-semibold text-slate-900 truncate">{user.restaurant_name}</h1>
-            <p className="text-sm text-slate-500 truncate">{user.email}</p>
-          </div>
+          <Link href="/" className="flex items-center gap-3 min-w-0 flex-1 hover:opacity-90 transition-opacity">
+            <div className="w-10 h-10 bg-gradient-to-br from-violet-500 to-fuchsia-500 rounded-xl flex items-center justify-center shadow-sm flex-shrink-0">
+              <span className="text-white font-bold">K</span>
+            </div>
+            <div className="min-w-0">
+              <h1 className="text-xl sm:text-2xl font-semibold text-slate-900">Kitchen Ready</h1>
+              <p className="text-sm text-slate-500 truncate">{user.restaurant_name}</p>
+            </div>
+          </Link>
           <div className="flex items-center gap-4">
             <Link
               href="/dashboard/settings"
@@ -168,7 +173,7 @@ function DashboardContent() {
           <h2 className="text-lg font-semibold text-slate-900">Your Events</h2>
           <Link
             href="/dashboard/create"
-            className="inline-flex items-center justify-center gap-2 px-4 py-2 bg-slate-900 text-white rounded-lg text-sm font-medium hover:bg-slate-800 transition-colors"
+            className="inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-gradient-to-r from-violet-500 to-fuchsia-500 text-white rounded-xl text-sm font-semibold hover:opacity-90 transition-all shadow-lg shadow-violet-500/25"
           >
             <PlusIcon />
             Create New Event

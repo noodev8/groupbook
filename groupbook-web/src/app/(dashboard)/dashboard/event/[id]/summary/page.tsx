@@ -163,7 +163,7 @@ export default function EventSummaryPage() {
             </div>
             <button
               onClick={handlePrint}
-              className="px-5 py-2.5 bg-slate-900 text-white rounded-lg hover:bg-slate-800 transition-colors text-sm font-medium"
+              className="px-5 py-2.5 bg-gradient-to-r from-violet-500 to-fuchsia-500 text-white rounded-xl hover:opacity-90 transition-all text-sm font-semibold shadow-lg shadow-violet-500/25"
             >
               Print Report
             </button>

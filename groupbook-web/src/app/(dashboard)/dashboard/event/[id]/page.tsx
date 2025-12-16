@@ -294,7 +294,7 @@ export default function EventManagementPage() {
             <div className="flex items-center gap-3 min-w-0">
               <h1 className="text-xl sm:text-2xl font-semibold text-slate-900 truncate">{event.event_name}</h1>
               {event.is_locked && (
-                <span className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-xs font-medium bg-amber-100 text-amber-700 flex-shrink-0">
+                <span className="inline-flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-medium bg-amber-100 text-amber-700 flex-shrink-0">
                   <LockIcon />
                   Locked
                 </span>
@@ -306,13 +306,13 @@ export default function EventManagementPage() {
               <button
                 onClick={handleToggleLock}
                 disabled={isTogglingLock}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-md transition-colors disabled:opacity-50"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-colors disabled:opacity-50"
               >
                 {isTogglingLock ? '...' : event.is_locked ? <><UnlockIcon /> Unlock</> : <><LockIcon /> Lock</>}
               </button>
               <Link
                 href={`/dashboard/event/${eventId}/edit`}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-md transition-colors"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-colors"
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
@@ -321,7 +321,7 @@ export default function EventManagementPage() {
               </Link>
               <button
                 onClick={() => setShowDeleteConfirm(true)}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-red-600 hover:text-red-700 hover:bg-red-50 rounded-md transition-colors"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors"
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
@@ -346,14 +346,14 @@ export default function EventManagementPage() {
       <main className="max-w-6xl mx-auto px-4 py-6 sm:px-6 lg:px-8">
         <div className="grid gap-5 md:grid-cols-2">
           {/* Event Details Card */}
-          <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-            <div className="px-5 py-4 border-b border-slate-100 flex items-center gap-3">
+          <div className="bg-white rounded-lg shadow-sm overflow-hidden">
+            <div className="px-5 py-4 flex items-center gap-3">
               <div className="p-2 bg-blue-50 text-blue-600 rounded-lg">
                 <CalendarIcon />
               </div>
               <h2 className="font-semibold text-slate-900">Event Details</h2>
             </div>
-            <div className="px-5 py-4">
+            <div className="px-5 pb-5">
               <dl className="space-y-4">
                 <div>
                   <dt className="text-xs font-medium text-slate-500 uppercase tracking-wide">Date & Time</dt>
@@ -365,24 +365,20 @@ export default function EventManagementPage() {
                     <dd className="mt-1 text-sm text-slate-900">{formatDateTime(event.cutoff_datetime)}</dd>
                   </div>
                 )}
-                <div>
-                  <dt className="text-xs font-medium text-slate-500 uppercase tracking-wide">Restaurant</dt>
-                  <dd className="mt-1 text-sm text-slate-900">{event.restaurant_name}</dd>
-                </div>
               </dl>
             </div>
           </div>
 
           {/* Party Lead Card */}
           {(event.party_lead_name || event.party_lead_email || event.party_lead_phone) && (
-            <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-              <div className="px-5 py-4 border-b border-slate-100 flex items-center gap-3">
-                <div className="p-2 bg-emerald-50 text-emerald-600 rounded-lg">
+            <div className="bg-white rounded-lg shadow-sm overflow-hidden">
+              <div className="px-5 py-4 flex items-center gap-3">
+                <div className="p-2 bg-blue-50 text-blue-600 rounded-lg">
                   <UserIcon />
                 </div>
                 <h2 className="font-semibold text-slate-900">Party Lead</h2>
               </div>
-              <div className="px-5 py-4">
+              <div className="px-5 pb-5">
                 <dl className="space-y-4">
                   {event.party_lead_name && (
                     <div>
@@ -416,14 +412,14 @@ export default function EventManagementPage() {
           )}
 
           {/* Shareable Link Card */}
-          <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-            <div className="px-5 py-4 border-b border-slate-100 flex items-center gap-3">
-              <div className="p-2 bg-violet-50 text-violet-600 rounded-lg">
+          <div className="bg-white rounded-lg shadow-sm overflow-hidden">
+            <div className="px-5 py-4 flex items-center gap-3">
+              <div className="p-2 bg-blue-50 text-blue-600 rounded-lg">
                 <LinkIcon />
               </div>
               <h2 className="font-semibold text-slate-900">Shareable Link</h2>
             </div>
-            <div className="px-5 py-4">
+            <div className="px-5 pb-5">
               <p className="text-sm text-slate-500 mb-3">
                 Share this link with the organiser or guests:
               </p>
@@ -438,28 +434,24 @@ export default function EventManagementPage() {
                   onClick={copyLink}
                   className={`px-4 py-2 rounded-lg text-sm font-medium transition-all flex-shrink-0 ${
                     linkCopied
-                      ? 'bg-emerald-500 text-white'
-                      : 'bg-blue-600 text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500'
+                      ? 'bg-gradient-to-r from-violet-500 to-fuchsia-500 text-white'
+                      : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
                   }`}
                 >
-                  {linkCopied ? 'Copied!' : 'Copy Link'}
+                  {linkCopied ? 'Copied!' : 'Copy'}
                 </button>
               </div>
               {event.party_lead_email && (
                 <div className="mt-4 pt-4 border-t border-slate-100">
-                  <p className="text-sm text-slate-500 mb-3">
-                    Or send directly to the organiser:
-                  </p>
                   <button
                     onClick={handleSendInvite}
                     disabled={isSendingInvite}
-                    className={`w-full sm:w-auto px-4 py-2 rounded-lg text-sm font-medium transition-all disabled:opacity-50 ${
-                      inviteSent
-                        ? 'bg-emerald-500 text-white'
-                        : 'bg-emerald-600 text-white hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500'
-                    }`}
+                    className="text-sm text-slate-600 hover:text-slate-900 transition-colors disabled:opacity-50 inline-flex items-center gap-1.5"
                   >
-                    {isSendingInvite ? 'Sending...' : inviteSent ? 'Sent!' : `Email ${event.party_lead_email}`}
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                    </svg>
+                    {isSendingInvite ? 'Sending...' : inviteSent ? 'Sent!' : `Send to ${event.party_lead_email}`}
                   </button>
                 </div>
               )}
@@ -467,14 +459,14 @@ export default function EventManagementPage() {
           </div>
 
           {/* Staff Notes Card */}
-          <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-            <div className="px-5 py-4 border-b border-slate-100 flex items-center gap-3">
+          <div className="bg-white rounded-lg shadow-sm overflow-hidden">
+            <div className="px-5 py-4 flex items-center gap-3">
               <div className="p-2 bg-amber-50 text-amber-600 rounded-lg">
                 <NotesIcon />
               </div>
               <h2 className="font-semibold text-slate-900">Staff Notes</h2>
             </div>
-            <div className="px-5 py-4">
+            <div className="px-5 pb-5">
               <p className="text-sm text-slate-500 mb-3">
                 Internal notes visible only to staff (e.g., VIP, deposit paid).
               </p>
@@ -492,9 +484,13 @@ export default function EventManagementPage() {
                 <button
                   onClick={handleSaveNotes}
                   disabled={isSavingNotes || !notesHaveChanged}
-                  className="px-4 py-1.5 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                    notesHaveChanged
+                      ? 'bg-gradient-to-r from-violet-500 to-fuchsia-500 text-white hover:opacity-90 shadow-lg shadow-violet-500/25'
+                      : 'bg-slate-100 text-slate-400 cursor-not-allowed'
+                  }`}
                 >
-                  {isSavingNotes ? 'Saving...' : 'Save Notes'}
+                  {isSavingNotes ? 'Saving...' : 'Save'}
                 </button>
               </div>
             </div>
@@ -502,8 +498,8 @@ export default function EventManagementPage() {
         </div>
 
         {/* Guest List */}
-        <div className="mt-6 bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-          <div className="px-5 py-4 border-b border-slate-100">
+        <div className="mt-6 bg-white rounded-lg shadow-sm overflow-hidden">
+          <div className="px-5 py-4">
             <div className="flex justify-between items-center gap-4">
               <div className="flex items-center gap-3">
                 <div className="p-2 bg-blue-50 text-blue-600 rounded-lg">
@@ -516,7 +512,7 @@ export default function EventManagementPage() {
               </div>
               <Link
                 href={`/dashboard/event/${eventId}/summary`}
-                className="inline-flex items-center gap-2 px-4 py-2 bg-slate-900 text-white rounded-lg text-sm font-medium hover:bg-slate-800 transition-colors"
+                className="inline-flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-violet-500 to-fuchsia-500 text-white rounded-xl text-sm font-semibold hover:opacity-90 transition-all shadow-lg shadow-violet-500/25"
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
@@ -540,12 +536,12 @@ export default function EventManagementPage() {
             <ul className="divide-y divide-slate-100">
               {guests.map((guest, index) => (
                 <li key={guest.id} className="px-5 py-3 flex items-center gap-3 hover:bg-slate-50 transition-colors">
-                  <span className="w-6 h-6 flex items-center justify-center rounded-full bg-slate-100 text-xs font-medium text-slate-600">
+                  <span className="w-6 h-6 flex items-center justify-center rounded-full bg-slate-100 text-xs font-medium text-slate-600 flex-shrink-0">
                     {index + 1}
                   </span>
-                  <span className="text-sm text-slate-900 font-medium truncate">{guest.name}</span>
+                  <span className="text-sm text-slate-900 font-medium">{guest.name}</span>
                   {guest.dietary_notes && (
-                    <span className="ml-auto text-xs text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full truncate max-w-[150px]">
+                    <span className="text-xs text-amber-700 bg-amber-50 border border-amber-200 px-2.5 py-1 rounded-full">
                       {guest.dietary_notes}
                     </span>
                   )}
@@ -557,8 +553,11 @@ export default function EventManagementPage() {
           <div className="px-5 py-4 border-t border-slate-100 bg-slate-50">
             <Link
               href={`/event/${event.link_token}`}
-              className="inline-flex items-center gap-2 text-sm font-medium text-blue-600 hover:text-blue-800 transition-colors"
+              className="inline-flex items-center gap-2 text-sm font-medium text-slate-600 hover:text-slate-900 transition-colors"
             >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
+              </svg>
               View & Edit Orders
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
@@ -571,7 +570,7 @@ export default function EventManagementPage() {
       {/* Delete Confirmation Modal */}
       {showDeleteConfirm && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-xl shadow-2xl max-w-md w-full p-6 animate-in fade-in zoom-in duration-200">
+          <div className="bg-white rounded-lg shadow-2xl max-w-md w-full p-6 animate-in fade-in zoom-in duration-200">
             <div className="w-12 h-12 mx-auto mb-4 rounded-full bg-red-100 flex items-center justify-center">
               <svg className="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
