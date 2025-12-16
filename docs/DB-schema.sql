@@ -5,7 +5,7 @@
 -- Dumped from database version 16.11 (Ubuntu 16.11-0ubuntu0.24.04.1)
 -- Dumped by pg_dump version 17.4
 
--- Started on 2025-12-15 13:13:19
+-- Started on 2025-12-15 18:04:15
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
@@ -46,7 +46,12 @@ CREATE TABLE public.app_user (
     created_at timestamp without time zone DEFAULT now() NOT NULL,
     logo_url text,
     hero_image_url text,
-    terms_link text
+    terms_link text,
+    stripe_customer_id character varying(255),
+    stripe_subscription_id character varying(255),
+    subscription_status character varying(50) DEFAULT 'free'::character varying,
+    subscription_price_id character varying(255),
+    subscription_current_period_end timestamp without time zone
 );
 
 
@@ -69,7 +74,7 @@ CREATE SEQUENCE public.app_user_id_seq
 ALTER SEQUENCE public.app_user_id_seq OWNER TO groupbook_user;
 
 --
--- TOC entry 3427 (class 0 OID 0)
+-- TOC entry 3429 (class 0 OID 0)
 -- Dependencies: 219
 -- Name: app_user_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: groupbook_user
 --
@@ -119,7 +124,7 @@ CREATE SEQUENCE public.event_id_seq
 ALTER SEQUENCE public.event_id_seq OWNER TO groupbook_user;
 
 --
--- TOC entry 3428 (class 0 OID 0)
+-- TOC entry 3430 (class 0 OID 0)
 -- Dependencies: 215
 -- Name: event_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: groupbook_user
 --
@@ -162,7 +167,7 @@ CREATE SEQUENCE public.guest_id_seq
 ALTER SEQUENCE public.guest_id_seq OWNER TO groupbook_user;
 
 --
--- TOC entry 3429 (class 0 OID 0)
+-- TOC entry 3431 (class 0 OID 0)
 -- Dependencies: 217
 -- Name: guest_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: groupbook_user
 --
@@ -195,7 +200,7 @@ ALTER TABLE ONLY public.guest ALTER COLUMN id SET DEFAULT nextval('public.guest_
 
 
 --
--- TOC entry 3277 (class 2606 OID 23113)
+-- TOC entry 3278 (class 2606 OID 23113)
 -- Name: app_user app_user_pkey; Type: CONSTRAINT; Schema: public; Owner: groupbook_user
 --
 
@@ -204,7 +209,7 @@ ALTER TABLE ONLY public.app_user
 
 
 --
--- TOC entry 3269 (class 2606 OID 23093)
+-- TOC entry 3270 (class 2606 OID 23093)
 -- Name: event event_pkey; Type: CONSTRAINT; Schema: public; Owner: groupbook_user
 --
 
@@ -213,7 +218,7 @@ ALTER TABLE ONLY public.event
 
 
 --
--- TOC entry 3273 (class 2606 OID 23101)
+-- TOC entry 3274 (class 2606 OID 23101)
 -- Name: guest guest_pkey; Type: CONSTRAINT; Schema: public; Owner: groupbook_user
 --
 
@@ -222,7 +227,7 @@ ALTER TABLE ONLY public.guest
 
 
 --
--- TOC entry 3278 (class 1259 OID 23114)
+-- TOC entry 3279 (class 1259 OID 23114)
 -- Name: idx_app_user_email; Type: INDEX; Schema: public; Owner: groupbook_user
 --
 
@@ -230,7 +235,15 @@ CREATE UNIQUE INDEX idx_app_user_email ON public.app_user USING btree (email);
 
 
 --
--- TOC entry 3270 (class 1259 OID 23115)
+-- TOC entry 3280 (class 1259 OID 23139)
+-- Name: idx_app_user_stripe_customer_id; Type: INDEX; Schema: public; Owner: groupbook_user
+--
+
+CREATE INDEX idx_app_user_stripe_customer_id ON public.app_user USING btree (stripe_customer_id);
+
+
+--
+-- TOC entry 3271 (class 1259 OID 23115)
 -- Name: idx_event_app_user_id; Type: INDEX; Schema: public; Owner: groupbook_user
 --
 
@@ -238,7 +251,7 @@ CREATE INDEX idx_event_app_user_id ON public.event USING btree (app_user_id);
 
 
 --
--- TOC entry 3271 (class 1259 OID 23102)
+-- TOC entry 3272 (class 1259 OID 23102)
 -- Name: idx_event_link_token; Type: INDEX; Schema: public; Owner: groupbook_user
 --
 
@@ -246,7 +259,7 @@ CREATE UNIQUE INDEX idx_event_link_token ON public.event USING btree (link_token
 
 
 --
--- TOC entry 3274 (class 1259 OID 23127)
+-- TOC entry 3275 (class 1259 OID 23127)
 -- Name: idx_guest_edit_token; Type: INDEX; Schema: public; Owner: groupbook_user
 --
 
@@ -254,7 +267,7 @@ CREATE INDEX idx_guest_edit_token ON public.guest USING btree (edit_token);
 
 
 --
--- TOC entry 3275 (class 1259 OID 23103)
+-- TOC entry 3276 (class 1259 OID 23103)
 -- Name: idx_guest_event_id; Type: INDEX; Schema: public; Owner: groupbook_user
 --
 
@@ -277,7 +290,7 @@ ALTER DEFAULT PRIVILEGES FOR ROLE postgres IN SCHEMA public GRANT ALL ON SEQUENC
 ALTER DEFAULT PRIVILEGES FOR ROLE postgres IN SCHEMA public GRANT SELECT,INSERT,REFERENCES,DELETE,TRIGGER,TRUNCATE,UPDATE ON TABLES TO groupbook_user;
 
 
--- Completed on 2025-12-15 13:13:25
+-- Completed on 2025-12-15 18:04:17
 
 --
 -- PostgreSQL database dump complete

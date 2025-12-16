@@ -14,7 +14,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useAuth } from '@/context/AuthContext';
-import { getBranding, updateBranding, updateProfile, Branding } from '@/lib/api';
+import { getBranding, updateBranding, updateProfile, getBillingStatus, createPortalSession, createCheckoutSession, Branding, BillingStatus } from '@/lib/api';
 
 const CLOUDINARY_CLOUD_NAME = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
 const CLOUDINARY_UPLOAD_PRESET = process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET;
@@ -35,9 +35,11 @@ export default function SettingsPage() {
   const router = useRouter();
 
   const [branding, setBranding] = useState<Branding | null>(null);
+  const [billing, setBilling] = useState<BillingStatus | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [billingLoading, setBillingLoading] = useState(false);
 
   // Restaurant name state
   const [restaurantName, setRestaurantName] = useState('');
@@ -67,25 +69,33 @@ export default function SettingsPage() {
     }
   }, [user, isLoading, router]);
 
-  // Fetch current branding on mount
+  // Fetch current branding and billing on mount
   useEffect(() => {
-    const fetchBranding = async () => {
-      const result = await getBranding();
-      if (result.success && result.data) {
-        setBranding(result.data.branding);
-        setTermsLink(result.data.branding.terms_link || '');
+    const fetchData = async () => {
+      // Fetch branding
+      const brandingResult = await getBranding();
+      if (brandingResult.success && brandingResult.data) {
+        setBranding(brandingResult.data.branding);
+        setTermsLink(brandingResult.data.branding.terms_link || '');
       } else {
-        if (result.return_code === 'UNAUTHORIZED') {
+        if (brandingResult.return_code === 'UNAUTHORIZED') {
           logout();
           return;
         }
-        setError(result.error || 'Failed to load branding settings');
+        setError(brandingResult.error || 'Failed to load branding settings');
       }
+
+      // Fetch billing status
+      const billingResult = await getBillingStatus();
+      if (billingResult.success && billingResult.data) {
+        setBilling(billingResult.data.billing);
+      }
+
       setLoading(false);
     };
 
     if (user) {
-      fetchBranding();
+      fetchData();
     }
   }, [user, logout]);
 
@@ -240,6 +250,45 @@ export default function SettingsPage() {
     setSavingTerms(false);
   };
 
+  // Open Stripe billing portal
+  const handleManageBilling = async () => {
+    setBillingLoading(true);
+    setError('');
+
+    const result = await createPortalSession();
+    if (result.success && result.data) {
+      window.open(result.data.portal_url, '_blank');
+    } else {
+      setError(result.error || 'Failed to open billing portal');
+    }
+
+    setBillingLoading(false);
+  };
+
+  // Start upgrade checkout
+  const handleUpgrade = async (priceType: 'monthly' | 'annual') => {
+    setBillingLoading(true);
+    setError('');
+
+    const result = await createCheckoutSession(priceType);
+    if (result.success && result.data) {
+      window.location.href = result.data.checkout_url;
+    } else {
+      setError(result.error || 'Failed to start checkout');
+      setBillingLoading(false);
+    }
+  };
+
+  // Format date for display
+  const formatDate = (dateString: string | null) => {
+    if (!dateString) return '';
+    return new Date(dateString).toLocaleDateString('en-GB', {
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric',
+    });
+  };
+
   // Show loading state
   if (isLoading || loading) {
     return (
@@ -302,6 +351,84 @@ export default function SettingsPage() {
               {savingName ? 'Saving...' : 'Save'}
             </button>
           </div>
+        </div>
+
+        {/* Subscription Section */}
+        <div className="bg-white rounded-lg shadow p-4 md:p-6 mb-6">
+          <h2 className="text-base md:text-lg font-semibold text-gray-900 mb-4">Subscription</h2>
+
+          {billing && (
+            <div>
+              {/* Free user */}
+              {billing.status === 'free' && (
+                <div>
+                  <p className="text-sm text-gray-600 mb-4">
+                    Current plan: <span className="font-medium text-gray-900">Free</span> (1 event)
+                  </p>
+                  <div className="flex flex-col sm:flex-row gap-3">
+                    <button
+                      onClick={() => handleUpgrade('monthly')}
+                      disabled={billingLoading}
+                      className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50"
+                    >
+                      Upgrade - £35/month
+                    </button>
+                    <button
+                      onClick={() => handleUpgrade('annual')}
+                      disabled={billingLoading}
+                      className="px-4 py-2 border border-transparent rounded-md text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50"
+                    >
+                      Upgrade - £299/year (Save 29%)
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* Active subscriber */}
+              {(billing.status === 'active' || billing.status === 'cancelled') && (
+                <div>
+                  <p className="text-sm text-gray-600 mb-1">
+                    Current plan: <span className="font-medium text-gray-900">
+                      Pro ({billing.plan === 'monthly' ? 'Monthly' : 'Annual'})
+                    </span>
+                  </p>
+                  {billing.current_period_end && (
+                    <p className="text-sm text-gray-500 mb-4">
+                      {billing.status === 'cancelled' ? 'Access until' : 'Renews'}: {formatDate(billing.current_period_end)}
+                    </p>
+                  )}
+                  {billing.status === 'cancelled' && (
+                    <p className="text-sm text-amber-600 mb-4">
+                      Your subscription has been cancelled. You&apos;ll retain access until the end of your billing period.
+                    </p>
+                  )}
+                  <button
+                    onClick={handleManageBilling}
+                    disabled={billingLoading}
+                    className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50"
+                  >
+                    {billingLoading ? 'Opening...' : 'Manage Billing'}
+                  </button>
+                </div>
+              )}
+
+              {/* Past due */}
+              {billing.status === 'past_due' && (
+                <div>
+                  <p className="text-sm text-red-600 mb-4">
+                    Your payment failed. Please update your payment method to keep your subscription active.
+                  </p>
+                  <button
+                    onClick={handleManageBilling}
+                    disabled={billingLoading}
+                    className="px-4 py-2 border border-transparent rounded-md text-sm font-medium text-white bg-red-600 hover:bg-red-700 disabled:opacity-50"
+                  >
+                    {billingLoading ? 'Opening...' : 'Update Payment Method'}
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
         </div>
 
         {/* Branding Section Header */}

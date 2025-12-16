@@ -20,8 +20,14 @@ const app = express();
 // Middleware Setup
 // =======================================================================
 
-// Parse JSON request bodies
-app.use(express.json());
+// Parse JSON request bodies (skip for Stripe webhook which needs raw body)
+app.use((req, res, next) => {
+  if (req.originalUrl === '/api/billing/webhook') {
+    next();
+  } else {
+    express.json()(req, res, next);
+  }
+});
 
 // Configure CORS to allow requests from frontend origins
 app.use(cors({
@@ -50,6 +56,10 @@ const removeGuestRoute = require('./routes/guests/remove');
 const getBrandingRoute = require('./routes/branding/get');
 const updateBrandingRoute = require('./routes/branding/update');
 const updateProfileRoute = require('./routes/user/updateProfile');
+const billingWebhookRoute = require('./routes/billing/webhook');
+const createCheckoutSessionRoute = require('./routes/billing/createCheckoutSession');
+const createPortalSessionRoute = require('./routes/billing/createPortalSession');
+const billingStatusRoute = require('./routes/billing/status');
 
 // =======================================================================
 // Route Registration
@@ -81,6 +91,12 @@ app.use('/api/branding', updateBrandingRoute);
 
 // User routes
 app.use('/api/user', updateProfileRoute);
+
+// Billing routes
+app.use('/api/billing', billingWebhookRoute);
+app.use('/api/billing', createCheckoutSessionRoute);
+app.use('/api/billing', createPortalSessionRoute);
+app.use('/api/billing', billingStatusRoute);
 
 // =======================================================================
 // Health Check Endpoint

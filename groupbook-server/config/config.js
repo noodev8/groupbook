@@ -36,6 +36,14 @@ const config = {
     verificationUrl: process.env.EMAIL_VERIFICATION_URL,
   },
 
+  // Stripe billing settings
+  stripe: {
+    secretKey: process.env.STRIPE_SECRET_KEY,
+    webhookSecret: process.env.STRIPE_WEBHOOK_SECRET,
+    priceMonthly: process.env.STRIPE_PRICE_MONTHLY,
+    priceAnnual: process.env.STRIPE_PRICE_ANNUAL,
+  },
+
   // Logging
   checkApiCall: process.env.CHECK_API_CALL === 'YES',
 };

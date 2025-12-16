@@ -825,3 +825,123 @@ export async function updateBranding(
     };
   }
 }
+
+// -----------------------------------------------------------------------
+// Billing API Functions
+// -----------------------------------------------------------------------
+
+export interface BillingStatus {
+  status: 'free' | 'active' | 'past_due' | 'cancelled';
+  plan: 'monthly' | 'annual' | null;
+  current_period_end: string | null;
+  event_count: number;
+  event_limit: number | null;
+}
+
+/*
+ * Get Billing Status - Get current subscription status for the user
+ * Returns billing info including plan, status, and event limits
+ */
+export async function getBillingStatus(): Promise<ApiResponse<{ billing: BillingStatus }>> {
+  try {
+    const response = await apiCall<{ billing?: BillingStatus; message?: string }>(
+      '/api/billing/status',
+      {
+        method: 'GET',
+      }
+    );
+
+    if (response.return_code !== 'SUCCESS') {
+      return {
+        success: false,
+        error: response.message || 'Failed to load billing status',
+        return_code: response.return_code,
+      };
+    }
+
+    return {
+      success: true,
+      data: {
+        billing: response.billing!,
+      },
+    };
+  } catch (error) {
+    return {
+      success: false,
+      error: 'Network error - please check your connection',
+    };
+  }
+}
+
+/*
+ * Create Checkout Session - Start the upgrade flow
+ * Returns a Stripe checkout URL to redirect the user to
+ */
+export async function createCheckoutSession(
+  priceType: 'monthly' | 'annual'
+): Promise<ApiResponse<{ checkout_url: string }>> {
+  try {
+    const response = await apiCall<{ checkout_url?: string; message?: string }>(
+      '/api/billing/create-checkout-session',
+      {
+        method: 'POST',
+        body: JSON.stringify({ price_type: priceType }),
+      }
+    );
+
+    if (response.return_code !== 'SUCCESS') {
+      return {
+        success: false,
+        error: response.message || 'Failed to create checkout session',
+        return_code: response.return_code,
+      };
+    }
+
+    return {
+      success: true,
+      data: {
+        checkout_url: response.checkout_url!,
+      },
+    };
+  } catch (error) {
+    return {
+      success: false,
+      error: 'Network error - please check your connection',
+    };
+  }
+}
+
+/*
+ * Create Portal Session - Open Stripe billing portal for subscription management
+ * Returns a Stripe portal URL to redirect the user to
+ */
+export async function createPortalSession(): Promise<ApiResponse<{ portal_url: string }>> {
+  try {
+    const response = await apiCall<{ portal_url?: string; message?: string }>(
+      '/api/billing/create-portal-session',
+      {
+        method: 'POST',
+      }
+    );
+
+    if (response.return_code !== 'SUCCESS') {
+      return {
+        success: false,
+        error: response.message || 'Failed to open billing portal',
+        return_code: response.return_code,
+      };
+    }
+
+    return {
+      success: true,
+      data: {
+        portal_url: response.portal_url!,
+      },
+    };
+  } catch (error) {
+    return {
+      success: false,
+      error: 'Network error - please check your connection',
+    };
+  }
+}
