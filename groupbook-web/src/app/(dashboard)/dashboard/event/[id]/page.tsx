@@ -13,7 +13,7 @@ import { useEffect, useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/context/AuthContext';
-import { getEvent, listGuests, deleteEvent, toggleEventLock, sendEventInvite, updateEvent, Event, Guest } from '@/lib/api';
+import { deleteEvent, toggleEventLock, sendEventInvite, updateEvent, getEvent, listGuests, Event, Guest } from '@/lib/api';
 
 const MAX_NOTES_LENGTH = 500;
 
@@ -73,14 +73,17 @@ const TrashIcon = () => (
 );
 
 export default function EventManagementPage() {
-  const { user, isLoading, logout } = useAuth();
+  const { user, isLoading } = useAuth();
   const router = useRouter();
   const params = useParams();
   const eventId = Number(params.id);
 
+  // Event and guests state
   const [event, setEvent] = useState<Event | null>(null);
   const [guests, setGuests] = useState<Guest[]>([]);
+  const [eventError, setEventError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+
   const [error, setError] = useState('');
   const [linkCopied, setLinkCopied] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -92,46 +95,41 @@ export default function EventManagementPage() {
   const [originalNotes, setOriginalNotes] = useState('');
   const [isSavingNotes, setIsSavingNotes] = useState(false);
 
+  // Fetch event and guests on mount
+  useEffect(() => {
+    if (!user || !eventId) return;
+
+    Promise.all([
+      getEvent(eventId),
+      listGuests(eventId),
+    ]).then(([eventResult, guestsResult]) => {
+      if (eventResult.success && eventResult.data) {
+        setEvent(eventResult.data.event);
+      } else {
+        setEventError(eventResult.error || 'Failed to load event');
+      }
+      if (guestsResult.success && guestsResult.data) {
+        setGuests(guestsResult.data.guests);
+      }
+      setLoading(false);
+    });
+  }, [user, eventId]);
+
+  // Sync staff notes from event data
+  useEffect(() => {
+    if (event) {
+      const notes = event.staff_notes || '';
+      setStaffNotes(notes);
+      setOriginalNotes(notes);
+    }
+  }, [event]);
+
   // Redirect to login if not authenticated
   useEffect(() => {
     if (!isLoading && !user) {
       router.push('/login');
     }
   }, [user, isLoading, router]);
-
-  // Fetch event and guests when authenticated
-  useEffect(() => {
-    const fetchEventData = async () => {
-      setLoading(true);
-      setError('');
-
-      const eventResult = await getEvent(eventId);
-      if (!eventResult.success) {
-        if (eventResult.return_code === 'UNAUTHORIZED') {
-          logout();
-          return;
-        }
-        setError(eventResult.error || 'Failed to load event');
-        setLoading(false);
-        return;
-      }
-      setEvent(eventResult.data!.event);
-      const notes = eventResult.data!.event.staff_notes || '';
-      setStaffNotes(notes);
-      setOriginalNotes(notes);
-
-      const guestsResult = await listGuests(eventId);
-      if (guestsResult.success && guestsResult.data) {
-        setGuests(guestsResult.data.guests);
-      }
-
-      setLoading(false);
-    };
-
-    if (user && eventId) {
-      fetchEventData();
-    }
-  }, [user, eventId, logout]);
 
   const formatDateTime = (dateString: string) => {
     const date = new Date(dateString);
@@ -181,6 +179,7 @@ export default function EventManagementPage() {
     const result = await toggleEventLock(eventId, !event.is_locked);
 
     if (result.success && result.data) {
+      // Update local state with new lock status
       setEvent({ ...event, is_locked: result.data.event.is_locked });
     } else {
       setError(result.error || 'Failed to update lock status');
@@ -223,6 +222,10 @@ export default function EventManagementPage() {
 
     if (result.success) {
       setOriginalNotes(staffNotes.trim());
+      // Update local state with new event data
+      if (result.data) {
+        setEvent(result.data.event);
+      }
     } else {
       setError(result.error || 'Failed to save notes');
     }
@@ -250,8 +253,11 @@ export default function EventManagementPage() {
     return null;
   }
 
+  // Combined error from SWR and local state
+  const displayError = eventError || error;
+
   // Error state (no event loaded)
-  if (error && !event) {
+  if (displayError && !event) {
     return (
       <div className="min-h-screen bg-slate-100">
         <header className="relative overflow-hidden bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
@@ -270,7 +276,7 @@ export default function EventManagementPage() {
         </header>
         <main className="max-w-6xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
           <div className="bg-red-50 border border-red-200 text-red-700 px-5 py-4 rounded-2xl text-sm">
-            {error}
+            {displayError}
           </div>
         </main>
       </div>

@@ -10,7 +10,7 @@ Purpose: Main page for restaurant staff after login.
 =======================================================================================================================================
 */
 
-import { useEffect, useState, useCallback, Suspense } from 'react';
+import { useEffect, useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/context/AuthContext';
@@ -47,10 +47,26 @@ function DashboardContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
+  // Events state
   const [events, setEvents] = useState<Event[]>([]);
+  const [eventsError, setEventsError] = useState<string | null>(null);
   const [eventsLoading, setEventsLoading] = useState(true);
-  const [eventsError, setEventsError] = useState('');
+
   const [successMessage, setSuccessMessage] = useState('');
+
+  // Fetch events on mount
+  useEffect(() => {
+    if (!user) return;
+
+    listEvents().then((result) => {
+      if (result.success && result.data) {
+        setEvents(result.data.events);
+      } else {
+        setEventsError(result.error || 'Failed to load events');
+      }
+      setEventsLoading(false);
+    });
+  }, [user]);
 
   // Handle billing redirect params
   useEffect(() => {
@@ -76,33 +92,6 @@ function DashboardContent() {
       router.push('/login');
     }
   }, [user, isLoading, router]);
-
-  const fetchEvents = useCallback(async () => {
-    setEventsLoading(true);
-    setEventsError('');
-
-    const result = await listEvents();
-
-    if (result.success && result.data) {
-      setEvents(result.data.events);
-    } else {
-      // If token is invalid/expired, logout and redirect to login
-      if (result.return_code === 'UNAUTHORIZED') {
-        logout();
-        return;
-      }
-      setEventsError(result.error || 'Failed to load events');
-    }
-
-    setEventsLoading(false);
-  }, [logout]);
-
-  // Fetch events when user is authenticated
-  useEffect(() => {
-    if (user) {
-      fetchEvents();
-    }
-  }, [user, fetchEvents]);
 
   // Format date for display
   const formatDateTime = (dateString: string) => {

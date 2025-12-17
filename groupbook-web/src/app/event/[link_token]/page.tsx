@@ -9,11 +9,11 @@ Purpose: Public page where guests can view event details, see the guest list, an
 =======================================================================================================================================
 */
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
-import { getPublicEvent, addGuest, editGuest, removeGuest, PublicEvent, Guest, Branding } from '@/lib/api';
+import { addGuest, editGuest, removeGuest, getPublicEvent, PublicEvent, Guest, Branding } from '@/lib/api';
 
 // Cloudinary transformation URLs
 const getLogoUrl = (url: string) => {
@@ -65,12 +65,42 @@ export default function PublicEventPage() {
   const params = useParams();
   const linkToken = params.link_token as string;
 
+  // Event state
   const [event, setEvent] = useState<PublicEvent | null>(null);
   const [guests, setGuests] = useState<Guest[]>([]);
-  const [branding, setBranding] = useState<Branding | null>(null);
+  const [branding, setBranding] = useState<Branding>({ logo_url: null, hero_image_url: null, terms_link: null });
   const [isOwner, setIsOwner] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
+
+  // Fetch public event on mount
+  useEffect(() => {
+    if (!linkToken) return;
+
+    getPublicEvent(linkToken).then((result) => {
+      if (result.success && result.data) {
+        setEvent(result.data.event);
+        setGuests(result.data.guests);
+        setBranding(result.data.branding);
+        setIsOwner(result.data.is_owner);
+      } else {
+        setError(result.error || 'Failed to load event');
+      }
+      setLoading(false);
+    });
+  }, [linkToken]);
+
+  // Refetch data helper
+  const refetchData = async () => {
+    if (!linkToken) return;
+    const result = await getPublicEvent(linkToken);
+    if (result.success && result.data) {
+      setEvent(result.data.event);
+      setGuests(result.data.guests);
+      setBranding(result.data.branding);
+      setIsOwner(result.data.is_owner);
+    }
+  };
 
   // Modal state
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -88,30 +118,6 @@ export default function PublicEventPage() {
 
   // Check if branding is enabled (has logo or hero image)
   const hasBranding = branding?.hero_image_url || branding?.logo_url;
-
-  const fetchEvent = useCallback(async () => {
-    setLoading(true);
-    setError('');
-
-    const result = await getPublicEvent(linkToken);
-
-    if (result.success && result.data) {
-      setEvent(result.data.event);
-      setGuests(result.data.guests);
-      setBranding(result.data.branding);
-      setIsOwner(result.data.is_owner);
-    } else {
-      setError(result.error || 'Event not found');
-    }
-
-    setLoading(false);
-  }, [linkToken]);
-
-  useEffect(() => {
-    if (linkToken) {
-      fetchEvent();
-    }
-  }, [linkToken, fetchEvent]);
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -163,7 +169,7 @@ export default function PublicEventPage() {
       const result = await editGuest(linkToken, editingGuestId, name.trim(), foodOrder.trim(), dietaryNotes.trim());
       if (result.success) {
         closeModal();
-        fetchEvent();
+        await refetchData();
       } else {
         setSubmitError(result.error || 'Failed to update');
       }
@@ -172,7 +178,7 @@ export default function PublicEventPage() {
       const result = await addGuest(linkToken, name.trim(), foodOrder.trim(), dietaryNotes.trim());
       if (result.success) {
         closeModal();
-        fetchEvent();
+        await refetchData();
       } else {
         setSubmitError(result.error || 'Failed to add');
       }
@@ -186,7 +192,7 @@ export default function PublicEventPage() {
 
     const result = await removeGuest(linkToken, guestId);
     if (result.success) {
-      fetchEvent();
+      await refetchData();
     } else {
       alert(result.error || 'Failed to remove guest');
     }

@@ -39,15 +39,36 @@ const printStyles = `
 `;
 
 export default function EventSummaryPage() {
-  const { user, isLoading, logout } = useAuth();
+  const { user, isLoading } = useAuth();
   const router = useRouter();
   const params = useParams();
   const eventId = Number(params.id);
 
+  // Event and guests state
   const [event, setEvent] = useState<Event | null>(null);
   const [guests, setGuests] = useState<Guest[]>([]);
+  const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
+
+  // Fetch event and guests on mount
+  useEffect(() => {
+    if (!user || !eventId) return;
+
+    Promise.all([
+      getEvent(eventId),
+      listGuests(eventId),
+    ]).then(([eventResult, guestsResult]) => {
+      if (eventResult.success && eventResult.data) {
+        setEvent(eventResult.data.event);
+      } else {
+        setError(eventResult.error || 'Failed to load event');
+      }
+      if (guestsResult.success && guestsResult.data) {
+        setGuests(guestsResult.data.guests);
+      }
+      setLoading(false);
+    });
+  }, [user, eventId]);
 
   // Redirect to login if not authenticated
   useEffect(() => {
@@ -55,39 +76,6 @@ export default function EventSummaryPage() {
       router.push('/login');
     }
   }, [user, isLoading, router]);
-
-  // Fetch event and guests when authenticated
-  useEffect(() => {
-    const fetchEventData = async () => {
-      setLoading(true);
-      setError('');
-
-      // Fetch event details
-      const eventResult = await getEvent(eventId);
-      if (!eventResult.success) {
-        if (eventResult.return_code === 'UNAUTHORIZED') {
-          logout();
-          return;
-        }
-        setError(eventResult.error || 'Failed to load event');
-        setLoading(false);
-        return;
-      }
-      setEvent(eventResult.data!.event);
-
-      // Fetch guests
-      const guestsResult = await listGuests(eventId);
-      if (guestsResult.success && guestsResult.data) {
-        setGuests(guestsResult.data.guests);
-      }
-
-      setLoading(false);
-    };
-
-    if (user && eventId) {
-      fetchEventData();
-    }
-  }, [user, eventId, logout]);
 
   // Format date for display
   const formatDateTime = (dateString: string) => {

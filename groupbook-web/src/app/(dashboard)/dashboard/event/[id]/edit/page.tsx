@@ -13,7 +13,7 @@ import { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/context/AuthContext';
-import { getEvent, updateEvent } from '@/lib/api';
+import { updateEvent, getEvent, Event } from '@/lib/api';
 
 // Icons
 const CalendarIcon = () => (
@@ -35,10 +35,15 @@ const UserIcon = () => (
 );
 
 export default function EditEventPage() {
-  const { user, isLoading, logout } = useAuth();
+  const { user, isLoading } = useAuth();
   const router = useRouter();
   const params = useParams();
   const eventId = Number(params.id);
+
+  // Event state
+  const [event, setEvent] = useState<Event | null>(null);
+  const [eventError, setEventError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
 
   const [eventName, setEventName] = useState('');
   const [eventDateTime, setEventDateTime] = useState('');
@@ -48,48 +53,22 @@ export default function EditEventPage() {
   const [partyLeadPhone, setPartyLeadPhone] = useState('');
   const [menuLink, setMenuLink] = useState('');
   const [error, setError] = useState('');
-  const [loading, setLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [formInitialized, setFormInitialized] = useState(false);
 
-  // Redirect to login if not authenticated
+  // Fetch event on mount
   useEffect(() => {
-    if (!isLoading && !user) {
-      router.push('/login');
-    }
-  }, [user, isLoading, router]);
+    if (!user || !eventId) return;
 
-  // Fetch event data when authenticated
-  useEffect(() => {
-    const fetchEvent = async () => {
-      setLoading(true);
-      setError('');
-
-      const result = await getEvent(eventId);
-
+    getEvent(eventId).then((result) => {
       if (result.success && result.data) {
-        const event = result.data.event;
-        setEventName(event.event_name);
-        setEventDateTime(formatDateTimeForInput(event.event_date_time));
-        setCutoffDatetime(event.cutoff_datetime ? formatDateTimeForInput(event.cutoff_datetime) : '');
-        setPartyLeadName(event.party_lead_name || '');
-        setPartyLeadEmail(event.party_lead_email || '');
-        setPartyLeadPhone(event.party_lead_phone || '');
-        setMenuLink(event.menu_link || '');
+        setEvent(result.data.event);
       } else {
-        if (result.return_code === 'UNAUTHORIZED') {
-          logout();
-          return;
-        }
-        setError(result.error || 'Failed to load event');
+        setEventError(result.error || 'Failed to load event');
       }
-
       setLoading(false);
-    };
-
-    if (user && eventId) {
-      fetchEvent();
-    }
-  }, [user, eventId, logout]);
+    });
+  }, [user, eventId]);
 
   const formatDateTimeForInput = (isoString: string): string => {
     const date = new Date(isoString);
@@ -100,6 +79,30 @@ export default function EditEventPage() {
     const minutes = String(date.getMinutes()).padStart(2, '0');
     return `${year}-${month}-${day}T${hours}:${minutes}`;
   };
+
+  // Sync form state from event data (only once when event loads)
+  useEffect(() => {
+    if (event && !formInitialized) {
+      setEventName(event.event_name);
+      setEventDateTime(formatDateTimeForInput(event.event_date_time));
+      setCutoffDatetime(event.cutoff_datetime ? formatDateTimeForInput(event.cutoff_datetime) : '');
+      setPartyLeadName(event.party_lead_name || '');
+      setPartyLeadEmail(event.party_lead_email || '');
+      setPartyLeadPhone(event.party_lead_phone || '');
+      setMenuLink(event.menu_link || '');
+      setFormInitialized(true);
+    }
+  }, [event, formInitialized]);
+
+  // Redirect to login if not authenticated
+  useEffect(() => {
+    if (!isLoading && !user) {
+      router.push('/login');
+    }
+  }, [user, isLoading, router]);
+
+  // Combine errors
+  const displayError = eventError || error;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -179,9 +182,9 @@ export default function EditEventPage() {
         <main className="relative z-10 max-w-4xl mx-auto px-4 pb-12 sm:px-6 lg:px-8">
           <form onSubmit={handleSubmit}>
             {/* Error Message */}
-            {error && (
+            {displayError && (
               <div className="mb-6 bg-red-50 border border-red-200 text-red-700 px-5 py-4 rounded-2xl text-sm">
-                {error}
+                {displayError}
               </div>
             )}
 

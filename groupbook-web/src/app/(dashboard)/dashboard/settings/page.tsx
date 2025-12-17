@@ -14,7 +14,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useAuth } from '@/context/AuthContext';
-import { getBranding, updateBranding, updateProfile, getBillingStatus, createPortalSession, createCheckoutSession, Branding, BillingStatus } from '@/lib/api';
+import { updateBranding, updateProfile, createPortalSession, createCheckoutSession, Branding, getBranding, getBillingStatus, BillingStatus } from '@/lib/api';
 
 const CLOUDINARY_CLOUD_NAME = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
 const CLOUDINARY_UPLOAD_PRESET = process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET;
@@ -31,12 +31,15 @@ const getHeroUrl = (url: string) => {
 };
 
 export default function SettingsPage() {
-  const { user, isLoading, logout, updateUser } = useAuth();
+  const { user, isLoading, updateUser } = useAuth();
   const router = useRouter();
 
+  // Branding and billing state
   const [branding, setBranding] = useState<Branding | null>(null);
+  const [brandingLoading, setBrandingLoading] = useState(true);
   const [billing, setBilling] = useState<BillingStatus | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [billingDataLoading, setBillingDataLoading] = useState(true);
+
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [billingLoading, setBillingLoading] = useState(false);
@@ -51,9 +54,40 @@ export default function SettingsPage() {
   // Terms link state
   const [termsLink, setTermsLink] = useState('');
   const [savingTerms, setSavingTerms] = useState(false);
+  const [termsInitialized, setTermsInitialized] = useState(false);
 
   const logoInputRef = useRef<HTMLInputElement>(null);
   const heroInputRef = useRef<HTMLInputElement>(null);
+
+  const loading = brandingLoading || billingDataLoading;
+
+  // Fetch branding on mount
+  useEffect(() => {
+    if (!user) return;
+
+    getBranding().then((result) => {
+      if (result.success && result.data) {
+        setBranding(result.data.branding);
+        if (!termsInitialized) {
+          setTermsLink(result.data.branding.terms_link || '');
+          setTermsInitialized(true);
+        }
+      }
+      setBrandingLoading(false);
+    });
+  }, [user, termsInitialized]);
+
+  // Fetch billing on mount
+  useEffect(() => {
+    if (!user) return;
+
+    getBillingStatus().then((result) => {
+      if (result.success && result.data) {
+        setBilling(result.data.billing);
+      }
+      setBillingDataLoading(false);
+    });
+  }, [user]);
 
   // Initialize restaurant name from user
   useEffect(() => {
@@ -68,36 +102,6 @@ export default function SettingsPage() {
       router.push('/login');
     }
   }, [user, isLoading, router]);
-
-  // Fetch current branding and billing on mount
-  useEffect(() => {
-    const fetchData = async () => {
-      // Fetch branding
-      const brandingResult = await getBranding();
-      if (brandingResult.success && brandingResult.data) {
-        setBranding(brandingResult.data.branding);
-        setTermsLink(brandingResult.data.branding.terms_link || '');
-      } else {
-        if (brandingResult.return_code === 'UNAUTHORIZED') {
-          logout();
-          return;
-        }
-        setError(brandingResult.error || 'Failed to load branding settings');
-      }
-
-      // Fetch billing status
-      const billingResult = await getBillingStatus();
-      if (billingResult.success && billingResult.data) {
-        setBilling(billingResult.data.billing);
-      }
-
-      setLoading(false);
-    };
-
-    if (user) {
-      fetchData();
-    }
-  }, [user, logout]);
 
   // Upload image to Cloudinary
   const uploadToCloudinary = async (file: File): Promise<string | null> => {
@@ -129,18 +133,14 @@ export default function SettingsPage() {
   };
 
   // Save branding to database
-  const saveBranding = async (logoUrl: string | null, heroUrl: string | null, termsLink?: string | null) => {
+  const saveBranding = async (logoUrl: string | null, heroUrl: string | null, termsLinkValue?: string | null) => {
     setError('');
-    const result = await updateBranding(logoUrl, heroUrl, termsLink);
+    const result = await updateBranding(logoUrl, heroUrl, termsLinkValue);
     if (result.success) {
       setSuccess('Saved');
       setTimeout(() => setSuccess(''), 2000);
       return true;
     } else {
-      if (result.return_code === 'UNAUTHORIZED') {
-        logout();
-        return false;
-      }
       setError(result.error || 'Failed to save');
       return false;
     }
@@ -164,10 +164,6 @@ export default function SettingsPage() {
       setSuccess('Saved');
       setTimeout(() => setSuccess(''), 2000);
     } else {
-      if (result.return_code === 'UNAUTHORIZED') {
-        logout();
-        return;
-      }
       setError(result.error || 'Failed to save restaurant name');
     }
 

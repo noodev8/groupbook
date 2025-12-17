@@ -4,8 +4,12 @@ API Client
 =======================================================================================================================================
 Purpose: Provides functions for making API calls to the backend.
          Follows the API-Rules.md patterns - never throws on API errors, returns structured objects.
+         Read functions use withCache() for TTL-based caching.
+         Write functions invalidate relevant cache entries.
 =======================================================================================================================================
 */
+
+import { withCache, TTL, cacheUtils } from './cache';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3016';
 
@@ -189,6 +193,7 @@ export interface CreateEventParams {
 /*
  * Create Event - Create a new group booking event
  * Returns the created event on success, error info on failure
+ * Invalidates: events-list, billing (event count changes)
  */
 export async function createEvent(
   params: CreateEventParams
@@ -209,6 +214,10 @@ export async function createEvent(
         return_code: response.return_code,
       };
     }
+
+    // Invalidate relevant caches
+    cacheUtils.invalidate('events-list');
+    cacheUtils.invalidate('billing');
 
     return {
       success: true,
@@ -239,6 +248,7 @@ export interface UpdateEventParams {
 /*
  * Update Event - Update an existing event's details
  * Returns the updated event on success, error info on failure
+ * Invalidates: events-list, event-{id}, public-event-{token}
  */
 export async function updateEvent(
   params: UpdateEventParams
@@ -260,6 +270,14 @@ export async function updateEvent(
       };
     }
 
+    // Invalidate relevant caches
+    cacheUtils.invalidate('events-list');
+    cacheUtils.invalidate(`event-${params.event_id}`);
+    // Also invalidate public event if we have the token
+    if (response.event?.link_token) {
+      cacheUtils.invalidate(`public-event-${response.event.link_token}`);
+    }
+
     return {
       success: true,
       data: {
@@ -277,6 +295,7 @@ export async function updateEvent(
 /*
  * Delete Event - Permanently delete an event and all its guests
  * Returns success status
+ * Invalidates: events-list, event-{id}*, billing (event count changes)
  */
 export async function deleteEvent(
   eventId: number
@@ -298,6 +317,11 @@ export async function deleteEvent(
       };
     }
 
+    // Invalidate relevant caches
+    cacheUtils.invalidate('events-list');
+    cacheUtils.invalidatePattern(`event-${eventId}*`); // event-123, event-123-guests
+    cacheUtils.invalidate('billing');
+
     return {
       success: true,
       data: {
@@ -316,6 +340,7 @@ export async function deleteEvent(
  * Toggle Event Lock - Lock or unlock an event
  * When locked, guests cannot add/edit/remove themselves
  * Returns updated lock status on success, error info on failure
+ * Invalidates: events-list, event-{id}
  */
 export async function toggleEventLock(
   eventId: number,
@@ -337,6 +362,10 @@ export async function toggleEventLock(
         return_code: response.return_code,
       };
     }
+
+    // Invalidate relevant caches
+    cacheUtils.invalidate('events-list');
+    cacheUtils.invalidate(`event-${eventId}`);
 
     return {
       success: true,
@@ -393,71 +422,77 @@ export async function sendEventInvite(
 /*
  * List Events - Get all events for the authenticated user
  * Returns array of events on success, error info on failure
+ * Cached for 5 minutes (TTL.MEDIUM)
  */
 export async function listEvents(): Promise<ApiResponse<ListEventsResponse>> {
-  try {
-    const response = await apiCall<{ events?: Event[]; message?: string }>(
-      '/api/events/list',
-      {
-        method: 'GET',
-      }
-    );
+  return withCache('events-list', TTL.MEDIUM, async () => {
+    try {
+      const response = await apiCall<{ events?: Event[]; message?: string }>(
+        '/api/events/list',
+        {
+          method: 'GET',
+        }
+      );
 
-    if (response.return_code !== 'SUCCESS') {
+      if (response.return_code !== 'SUCCESS') {
+        return {
+          success: false,
+          error: response.message || 'Failed to load events',
+          return_code: response.return_code,
+        };
+      }
+
+      return {
+        success: true,
+        data: {
+          events: response.events || [],
+        },
+      };
+    } catch (error) {
       return {
         success: false,
-        error: response.message || 'Failed to load events',
-        return_code: response.return_code,
+        error: 'Network error - please check your connection',
       };
     }
-
-    return {
-      success: true,
-      data: {
-        events: response.events || [],
-      },
-    };
-  } catch (error) {
-    return {
-      success: false,
-      error: 'Network error - please check your connection',
-    };
-  }
+  });
 }
 
 /*
  * Get Event - Get a single event by ID (auth required)
  * Returns event details on success, error info on failure
+ * Cached for 5 minutes (TTL.MEDIUM)
  */
 export async function getEvent(eventId: number): Promise<ApiResponse<{ event: Event }>> {
-  try {
-    const response = await apiCall<{ event?: Event; message?: string }>(
-      `/api/events/get/${eventId}`,
-      {
-        method: 'GET',
-      }
-    );
+  return withCache(`event-${eventId}`, TTL.MEDIUM, async () => {
+    try {
+      const response = await apiCall<{ event?: Event; message?: string }>(
+        `/api/events/get/${eventId}`,
+        {
+          method: 'GET',
+        }
+      );
 
-    if (response.return_code !== 'SUCCESS') {
+      if (response.return_code !== 'SUCCESS') {
+        return {
+          success: false,
+          error: response.message || 'Failed to load event',
+          return_code: response.return_code,
+        };
+      }
+
+      return {
+        success: true,
+        data: {
+          event: response.event!,
+        },
+      };
+    } catch (error) {
       return {
         success: false,
-        error: response.message || 'Failed to load event',
-        return_code: response.return_code,
+        error: 'Network error - please check your connection',
       };
     }
-
-    return {
-      success: true,
-      data: {
-        event: response.event!,
-      },
-    };
-  } catch (error) {
-    return {
-      success: false,
-      error: 'Network error - please check your connection',
-    };
-  }
+  });
 }
 
 // -----------------------------------------------------------------------
@@ -475,36 +510,39 @@ export interface Guest {
 /*
  * List Guests - Get all guests for an event (auth required)
  * Returns array of guests on success, error info on failure
+ * Cached for 2 minutes (TTL.SHORT)
  */
 export async function listGuests(eventId: number): Promise<ApiResponse<{ guests: Guest[] }>> {
-  try {
-    const response = await apiCall<{ guests?: Guest[]; message?: string }>(
-      `/api/guests/list/${eventId}`,
-      {
-        method: 'GET',
-      }
-    );
+  return withCache(`event-${eventId}-guests`, TTL.SHORT, async () => {
+    try {
+      const response = await apiCall<{ guests?: Guest[]; message?: string }>(
+        `/api/guests/list/${eventId}`,
+        {
+          method: 'GET',
+        }
+      );
 
-    if (response.return_code !== 'SUCCESS') {
+      if (response.return_code !== 'SUCCESS') {
+        return {
+          success: false,
+          error: response.message || 'Failed to load guests',
+          return_code: response.return_code,
+        };
+      }
+
+      return {
+        success: true,
+        data: {
+          guests: response.guests || [],
+        },
+      };
+    } catch (error) {
       return {
         success: false,
-        error: response.message || 'Failed to load guests',
-        return_code: response.return_code,
+        error: 'Network error - please check your connection',
       };
     }
-
-    return {
-      success: true,
-      data: {
-        guests: response.guests || [],
-      },
-    };
-  } catch (error) {
-    return {
-      success: false,
-      error: 'Network error - please check your connection',
-    };
-  }
+  });
 }
 
 // -----------------------------------------------------------------------
@@ -527,44 +565,48 @@ export interface PublicEvent {
  * Auth is optional - if authenticated and owner, is_owner will be true
  * Used by guests to view event and attendee list
  * Includes branding (logo_url, hero_image_url) from the restaurant owner
+ * Cached for 2 minutes (TTL.SHORT)
  */
 export async function getPublicEvent(linkToken: string): Promise<ApiResponse<{ event: PublicEvent; guests: Guest[]; branding: Branding; is_owner: boolean }>> {
-  try {
-    const response = await apiCall<{ event?: PublicEvent; guests?: Guest[]; branding?: Branding; is_owner?: boolean; message?: string }>(
-      `/api/events/public/${linkToken}`,
-      {
-        method: 'GET',
-      }
-    );
+  return withCache(`public-event-${linkToken}`, TTL.SHORT, async () => {
+    try {
+      const response = await apiCall<{ event?: PublicEvent; guests?: Guest[]; branding?: Branding; is_owner?: boolean; message?: string }>(
+        `/api/events/public/${linkToken}`,
+        {
+          method: 'GET',
+        }
+      );
 
-    if (response.return_code !== 'SUCCESS') {
+      if (response.return_code !== 'SUCCESS') {
+        return {
+          success: false,
+          error: response.message || 'Failed to load event',
+          return_code: response.return_code,
+        };
+      }
+
+      return {
+        success: true,
+        data: {
+          event: response.event!,
+          guests: response.guests || [],
+          branding: response.branding || { logo_url: null, hero_image_url: null, terms_link: null },
+          is_owner: response.is_owner || false,
+        },
+      };
+    } catch (error) {
       return {
         success: false,
-        error: response.message || 'Failed to load event',
-        return_code: response.return_code,
+        error: 'Network error - please check your connection',
       };
     }
-
-    return {
-      success: true,
-      data: {
-        event: response.event!,
-        guests: response.guests || [],
-        branding: response.branding || { logo_url: null, hero_image_url: null, terms_link: null },
-        is_owner: response.is_owner || false,
-      },
-    };
-  } catch (error) {
-    return {
-      success: false,
-      error: 'Network error - please check your connection',
-    };
-  }
+  });
 }
 
 /*
  * Add Guest - Add a guest to an event using link_token (no auth required)
  * Used by guests to register themselves for an event
+ * Invalidates: public-event-{token}, events-list (guest count changes)
  */
 export async function addGuest(
   linkToken: string,
@@ -594,6 +636,10 @@ export async function addGuest(
       };
     }
 
+    // Invalidate relevant caches
+    cacheUtils.invalidate(`public-event-${linkToken}`);
+    cacheUtils.invalidate('events-list'); // Guest count changes
+
     return {
       success: true,
       data: {
@@ -611,6 +657,7 @@ export async function addGuest(
 /*
  * Edit Guest - Edit a guest's details using link_token (no auth required)
  * Used by anyone to update guest information
+ * Invalidates: public-event-{token}
  */
 export async function editGuest(
   linkToken: string,
@@ -642,6 +689,9 @@ export async function editGuest(
       };
     }
 
+    // Invalidate relevant caches
+    cacheUtils.invalidate(`public-event-${linkToken}`);
+
     return {
       success: true,
       data: {
@@ -659,6 +709,7 @@ export async function editGuest(
 /*
  * Remove Guest - Remove a guest from an event using link_token (no auth required)
  * Used by anyone to remove a guest
+ * Invalidates: public-event-{token}, events-list (guest count changes)
  */
 export async function removeGuest(
   linkToken: string,
@@ -683,6 +734,10 @@ export async function removeGuest(
         return_code: response.return_code,
       };
     }
+
+    // Invalidate relevant caches
+    cacheUtils.invalidate(`public-event-${linkToken}`);
+    cacheUtils.invalidate('events-list'); // Guest count changes
 
     return {
       success: true,
@@ -750,41 +805,45 @@ export interface Branding {
 /*
  * Get Branding - Get branding settings for the authenticated user
  * Returns logo and hero image URLs on success
+ * Cached for 30 minutes (TTL.VERY_LONG)
  */
 export async function getBranding(): Promise<ApiResponse<{ branding: Branding }>> {
-  try {
-    const response = await apiCall<{ branding?: Branding; message?: string }>(
-      '/api/branding/get',
-      {
-        method: 'GET',
-      }
-    );
+  return withCache('branding', TTL.VERY_LONG, async () => {
+    try {
+      const response = await apiCall<{ branding?: Branding; message?: string }>(
+        '/api/branding/get',
+        {
+          method: 'GET',
+        }
+      );
 
-    if (response.return_code !== 'SUCCESS') {
+      if (response.return_code !== 'SUCCESS') {
+        return {
+          success: false,
+          error: response.message || 'Failed to load branding',
+          return_code: response.return_code,
+        };
+      }
+
+      return {
+        success: true,
+        data: {
+          branding: response.branding!,
+        },
+      };
+    } catch (error) {
       return {
         success: false,
-        error: response.message || 'Failed to load branding',
-        return_code: response.return_code,
+        error: 'Network error - please check your connection',
       };
     }
-
-    return {
-      success: true,
-      data: {
-        branding: response.branding!,
-      },
-    };
-  } catch (error) {
-    return {
-      success: false,
-      error: 'Network error - please check your connection',
-    };
-  }
+  });
 }
 
 /*
  * Update Branding - Update branding settings for the authenticated user
  * Pass null to clear a field, undefined to leave unchanged
+ * Invalidates: branding
  */
 export async function updateBranding(
   logoUrl?: string | null,
@@ -811,6 +870,9 @@ export async function updateBranding(
         return_code: response.return_code,
       };
     }
+
+    // Invalidate branding cache
+    cacheUtils.invalidate('branding');
 
     return {
       success: true,
@@ -841,36 +903,39 @@ export interface BillingStatus {
 /*
  * Get Billing Status - Get current subscription status for the user
  * Returns billing info including plan, status, and event limits
+ * Cached for 10 minutes (TTL.LONG)
  */
 export async function getBillingStatus(): Promise<ApiResponse<{ billing: BillingStatus }>> {
-  try {
-    const response = await apiCall<{ billing?: BillingStatus; message?: string }>(
-      '/api/billing/status',
-      {
-        method: 'GET',
-      }
-    );
+  return withCache('billing', TTL.LONG, async () => {
+    try {
+      const response = await apiCall<{ billing?: BillingStatus; message?: string }>(
+        '/api/billing/status',
+        {
+          method: 'GET',
+        }
+      );
 
-    if (response.return_code !== 'SUCCESS') {
+      if (response.return_code !== 'SUCCESS') {
+        return {
+          success: false,
+          error: response.message || 'Failed to load billing status',
+          return_code: response.return_code,
+        };
+      }
+
+      return {
+        success: true,
+        data: {
+          billing: response.billing!,
+        },
+      };
+    } catch (error) {
       return {
         success: false,
-        error: response.message || 'Failed to load billing status',
-        return_code: response.return_code,
+        error: 'Network error - please check your connection',
       };
     }
-
-    return {
-      success: true,
-      data: {
-        billing: response.billing!,
-      },
-    };
-  } catch (error) {
-    return {
-      success: false,
-      error: 'Network error - please check your connection',
-    };
-  }
+  });
 }
 
 /*

@@ -13,7 +13,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/context/AuthContext';
-import { createEvent, getBillingStatus } from '@/lib/api';
+import { createEvent, getBillingStatus, BillingStatus } from '@/lib/api';
 import UpgradeModal from '@/components/UpgradeModal';
 
 // Form data interface
@@ -31,6 +31,10 @@ export default function CreateEventPage() {
   const { user, isLoading } = useAuth();
   const router = useRouter();
 
+  // Billing state
+  const [billing, setBilling] = useState<BillingStatus | null>(null);
+  const [billingLoading, setBillingLoading] = useState(true);
+
   // Wizard state
   const [step, setStep] = useState(1);
   const [formData, setFormData] = useState<FormData>({
@@ -46,7 +50,6 @@ export default function CreateEventPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Billing state
-  const [checkingBilling, setCheckingBilling] = useState(true);
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
 
   // Animation state for step transitions
@@ -59,23 +62,24 @@ export default function CreateEventPage() {
     }
   }, [user, isLoading, router]);
 
-  // Check billing status on mount
+  // Fetch billing status on mount
   useEffect(() => {
-    const checkBilling = async () => {
-      const result = await getBillingStatus();
-      if (result.success && result.data) {
-        const { billing } = result.data;
-        if (billing.event_limit !== null && billing.event_count >= billing.event_limit) {
-          setShowUpgradeModal(true);
-        }
-      }
-      setCheckingBilling(false);
-    };
+    if (!user) return;
 
-    if (user) {
-      checkBilling();
-    }
+    getBillingStatus().then((result) => {
+      if (result.success && result.data) {
+        setBilling(result.data.billing);
+      }
+      setBillingLoading(false);
+    });
   }, [user]);
+
+  // Check billing limits when billing data loads
+  useEffect(() => {
+    if (billing && billing.event_limit !== null && billing.event_count >= billing.event_limit) {
+      setShowUpgradeModal(true);
+    }
+  }, [billing]);
 
   // Update form data helper
   const updateField = (field: keyof FormData, value: string) => {
@@ -120,7 +124,7 @@ export default function CreateEventPage() {
   };
 
   // Show loading state while checking auth or billing
-  if (isLoading || checkingBilling) {
+  if (isLoading || billingLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-slate-950">
         <div className="flex items-center gap-3 text-slate-400">
