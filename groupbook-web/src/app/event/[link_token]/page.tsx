@@ -55,12 +55,6 @@ const CloseIcon = () => (
   </svg>
 );
 
-const MoreIcon = () => (
-  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
-  </svg>
-);
-
 export default function PublicEventPage() {
   const params = useParams();
   const linkToken = params.link_token as string;
@@ -105,9 +99,6 @@ export default function PublicEventPage() {
   // Modal state
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  // Dropdown menu state
-  const [openMenuId, setOpenMenuId] = useState<number | null>(null);
-
   // Form state
   const [name, setName] = useState('');
   const [foodOrder, setFoodOrder] = useState('');
@@ -118,15 +109,6 @@ export default function PublicEventPage() {
 
   // Check if branding is enabled (has logo or hero image)
   const hasBranding = branding?.hero_image_url || branding?.logo_url;
-
-  // Close dropdown when clicking outside
-  useEffect(() => {
-    const handleClickOutside = () => setOpenMenuId(null);
-    if (openMenuId !== null) {
-      document.addEventListener('click', handleClickOutside);
-      return () => document.removeEventListener('click', handleClickOutside);
-    }
-  }, [openMenuId]);
 
   const resetForm = () => {
     setName('');
@@ -192,6 +174,7 @@ export default function PublicEventPage() {
 
     const result = await removeGuest(linkToken, guestId);
     if (result.success) {
+      closeModal();
       await refetchData();
     } else {
       alert(result.error || 'Failed to remove guest');
@@ -370,6 +353,19 @@ export default function PublicEventPage() {
                 {submitting ? 'Saving...' : editingGuestId ? 'Update' : 'Add Guest'}
               </button>
             </div>
+
+            {/* Remove from list - only shown when editing */}
+            {editingGuestId && (
+              <div className="pt-4 mt-4 border-t border-slate-100">
+                <button
+                  type="button"
+                  onClick={() => handleRemove(editingGuestId)}
+                  className="w-full py-2.5 text-sm font-medium text-red-600 hover:text-red-700 hover:bg-red-50 rounded-xl transition-colors"
+                >
+                  Remove from list
+                </button>
+              </div>
+            )}
           </form>
         </div>
       </div>
@@ -423,63 +419,32 @@ export default function PublicEventPage() {
             {guests.map((guest, index) => (
               <li
                 key={guest.id}
-                className="p-4 bg-slate-50 rounded-xl hover:bg-slate-100 transition-colors"
+                onClick={() => canEdit() && openModal(guest)}
+                className={`p-4 bg-slate-50 rounded-xl transition-colors ${canEdit() ? 'cursor-pointer hover:bg-slate-100' : ''}`}
               >
-                <div className="flex items-start justify-between gap-3">
-                  <div className="flex items-start gap-3 sm:gap-4 flex-1 min-w-0">
-                    <span className="w-8 h-8 flex items-center justify-center rounded-full bg-gradient-to-br from-violet-500 to-fuchsia-500 text-sm font-semibold text-white flex-shrink-0">
-                      {index + 1}
-                    </span>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <span className="font-semibold text-slate-900">{guest.name}</span>
-                        {guest.dietary_notes && (
-                          <span className="text-amber-700 bg-amber-50 border border-amber-200 text-xs px-2.5 py-1 rounded-full font-medium">
-                            {guest.dietary_notes}
-                          </span>
-                        )}
-                      </div>
-                      {guest.food_order && (
-                        <p className="text-slate-600 mt-1">{guest.food_order}</p>
+                <div className="flex items-start gap-3 sm:gap-4">
+                  <span className="w-8 h-8 flex items-center justify-center rounded-full bg-gradient-to-br from-violet-500 to-fuchsia-500 text-sm font-semibold text-white flex-shrink-0">
+                    {index + 1}
+                  </span>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="font-semibold text-slate-900">{guest.name}</span>
+                      {guest.dietary_notes && (
+                        <span className="text-amber-700 bg-amber-50 border border-amber-200 text-xs px-2.5 py-1 rounded-full font-medium">
+                          {guest.dietary_notes}
+                        </span>
                       )}
                     </div>
+                    {guest.food_order ? (
+                      <p className="text-slate-600 mt-1">{guest.food_order}</p>
+                    ) : (
+                      <p className="text-slate-400 mt-1 italic">No order yet</p>
+                    )}
                   </div>
                   {canEdit() && (
-                    <div className="relative flex-shrink-0">
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setOpenMenuId(openMenuId === guest.id ? null : guest.id);
-                        }}
-                        className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-200 rounded-lg transition-colors"
-                      >
-                        <MoreIcon />
-                      </button>
-                      {openMenuId === guest.id && (
-                        <div className="absolute right-0 bottom-full mb-1 w-32 bg-white rounded-xl shadow-lg border border-slate-200 py-1 z-10">
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setOpenMenuId(null);
-                              openModal(guest);
-                            }}
-                            className="w-full px-4 py-2.5 text-left text-sm font-medium text-slate-700 hover:bg-violet-50 hover:text-violet-600 transition-colors"
-                          >
-                            Edit
-                          </button>
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setOpenMenuId(null);
-                              handleRemove(guest.id);
-                            }}
-                            className="w-full px-4 py-2.5 text-left text-sm font-medium text-slate-700 hover:bg-red-50 hover:text-red-600 transition-colors"
-                          >
-                            Remove
-                          </button>
-                        </div>
-                      )}
-                    </div>
+                    <svg className="w-5 h-5 text-slate-300 flex-shrink-0 mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                    </svg>
                   )}
                 </div>
               </li>

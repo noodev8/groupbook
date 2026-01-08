@@ -12,6 +12,7 @@ Purpose: Manages authentication state across the application.
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
 import { User } from '@/lib/api';
+import { cacheUtils } from '@/lib/cache';
 
 // -----------------------------------------------------------------------
 // Types
@@ -70,10 +71,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     router.push('/dashboard');
   };
 
-  // Logout - clear token and user, redirect to login
+  // Logout - clear token, user, and cache, redirect to login
   const logout = () => {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
+    cacheUtils.clearAll(); // Clear API cache to prevent stale auth errors
     setToken(null);
     setUser(null);
     router.push('/login');

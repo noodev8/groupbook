@@ -124,7 +124,12 @@ export async function withCache<T>(
   // 3. Make API call
   const request = apiCall()
     .then((data) => {
-      apiCache.set(key, data, ttl);
+      // Only cache successful responses (those with success: true)
+      // This prevents caching auth errors that would persist after re-login
+      const response = data as { success?: boolean };
+      if (response.success !== false) {
+        apiCache.set(key, data, ttl);
+      }
       pendingRequests.delete(key);
       return data;
     })
